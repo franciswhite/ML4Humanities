@@ -1,0 +1,2 @@
+The functions are contained in "multivariate_linear_regression.py". Run "exec_multiregression.py"
+to run your desired machine learning method on the toy data provided.
