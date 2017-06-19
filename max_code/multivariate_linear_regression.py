@@ -161,6 +161,23 @@ def sqrt_predictor(predictors,i):
     predictors=np.c_[np.array(predictors),sqrt]
     return predictors
 
+def linear_predictions(predictors, parameters):
+    predictions=np.dot(predictors, parameters)
+    return(predictions)
+
+def logistic_predictions(predictors, parameters):
+    predictions=1/(1+np.exp((-1)*(np.dot(predictors, parameters))))
+    return predictions
+
+def linear_cost(linear_predictions, independents):
+    cost= 1/linear_predictions.shape[0]*np.sum(1/2*(linear_predictions-independents)**2)
+    return cost
+
+
+def logistic_cost(logistic_predictions, independents):
+    cost=(-1)/logistic_predictions.shape[0]*(np.dot(independents, np.log(logistic_predictions)+(np.dot((1-independents),np.log(1-logistic_predictions)))))
+    return cost
+
 def linear_cost_derivative(predictors, parameters, independents, checker):
     """
 
