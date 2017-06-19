@@ -162,33 +162,56 @@ def sqrt_predictor(predictors,i):
     return predictors
 
 def linear_predictions(predictors, parameters):
+    """
+
+    :param predictors: an array of predictors
+    :param parameters: an array of parameters
+    :return: an array of predictions for linear regression
+    """
     predictions=np.dot(predictors, parameters)
     return(predictions)
 
 def logistic_predictions(predictors, parameters):
+    """
+
+    :param predictors: an array of predictors
+    :param parameters: an array of parameters
+    :return: an array of predictions for logistic regression
+    """
     predictions=1/(1+np.exp((-1)*(np.dot(predictors, parameters))))
     return predictions
 
 def linear_cost(linear_predictions, independents):
+    """
+
+    :param linear_predictions: an array of predictions for linear regression
+    :param independents: an array of independent variable values
+    :return: the cost value (scalar)
+    """
     cost= 1/linear_predictions.shape[0]*np.sum(1/2*(linear_predictions-independents)**2)
     return cost
 
 
 def logistic_cost(logistic_predictions, independents):
+    """
+
+    :param logistic_predictions: an array of predictions for linear regression
+    :param independents: an array of independent variable values
+    :return: the cost value (scalar)
+    """
     cost=(-1)/logistic_predictions.shape[0]*(np.dot(independents, np.log(logistic_predictions)+(np.dot((1-independents),np.log(1-logistic_predictions)))))
     return cost
 
-def linear_cost_derivative(predictors, parameters, independents, checker):
+def linear_cost_derivative(predictors, predictions, independents, checker):
     """
 
     :param predictors: An array containing predictor values
-    :param parameters: An array of parameters
+    :param predictions: An array of predictions
     :param independents: An array containting independent values
     :param: checker: a list of convergence checkers
     :return: Array of partial derivatives of cost function for linear regression
     """
     temp_cost_derivatives=[]
-    predictions=np.dot(predictors, parameters)
     #print(parameters)
     for i in range(predictors.shape[1]):
         if checker[i]==0:
@@ -202,17 +225,16 @@ def linear_cost_derivative(predictors, parameters, independents, checker):
     #print(cost_derivatives)
     return cost_derivatives
 
-def logistic_cost_derivative(predictors, parameters, independents, checker):
+def logistic_cost_derivative(predictors, predictions, independents, checker):
     """
 
     :param predictors: An array containing predictor values
-    :param parameters: An array of parameters
+    :param predictions: An array of predictions
     :param independents: An array containting independent values
     :param checker: a list of convergence checkers
     :return: Array of partial derivatives of cost function for logistic regression
     """
     temp_cost_derivatives=[]
-    predictions=1/(1+np.exp((-1)*(np.dot(predictors, parameters))))
     for i in range(predictors.shape[1]):
         if checker[i]==0:
             cost_derivative=0
@@ -223,11 +245,11 @@ def logistic_cost_derivative(predictors, parameters, independents, checker):
     cost_derivatives=np.array(temp_cost_derivatives)
     return cost_derivatives
 
-def gradient_descent(parameters, cost, checker, alpha=0.001):
+def gradient_descent(parameters, cost_derivatives, checker, alpha=0.001):
     """
 
     :param parameters: An array containing parameter values
-    :param cost: An array containting cost values
+    :param cost: An array containting cost derivative values
     :param checker: a list of convergence checkers
     :param alpha: a float representing the learning rate
     :return: updated parameters after performing one step of gradient descent
@@ -235,7 +257,7 @@ def gradient_descent(parameters, cost, checker, alpha=0.001):
     temp_parameters=[i for i in parameters]
     for i in range(len(checker)):
         if checker[i]==1:
-            temp_parameters[i]=parameters[i]-alpha*cost[i]
+            temp_parameters[i]=parameters[i]-alpha*cost_derivatives[i]
     temp_parameters=np.array(temp_parameters)
     #print(parameters)
     return temp_parameters
@@ -288,7 +310,7 @@ def linear_regression(predictors, independents):
     checker=[1]*predictors.shape[1]
     parameters=[0]*predictors.shape[1]
     while checker!=[0]*predictors.shape[1]:
-        temp_parameters=gradient_descent(parameters, linear_cost_derivative(predictors, parameters, independents, checker), checker, alpha=0.01)
+        temp_parameters=gradient_descent(parameters, linear_cost_derivative(predictors, linear_predictions(predictors, parameters), independents, checker), checker, alpha=0.01)
         #print(temp_parameters)
         #print(parameters)
         convergence_checker(checker, temp_parameters, parameters, epsilon=0.0001)
@@ -311,7 +333,7 @@ def logistic_regression(predictors, independents):
     checker=[1]*predictors.shape[1]
     parameters=[0]*predictors.shape[1]
     while checker!=[0]*predictors.shape[1]:
-        temp_parameters=gradient_descent(parameters, logistic_cost_derivative(predictors, parameters, independents, checker), checker, alpha=0.01)
+        temp_parameters=gradient_descent(parameters, logistic_cost_derivative(predictors, logistic_predictions(predictors, parameters), independents, checker), checker, alpha=0.01)
         convergence_checker(checker, temp_parameters, parameters, epsilon=0.001)
         parameters=temp_parameters
         counter+=1
