@@ -10,7 +10,7 @@ import random
 #4. outer for loop
 
 class k_means(object):
-    '''K-means clustering algorithm, unsupervised learning.'''
+    '''K-means clustering algorithm, unsupervised learning. Most of code assumes only one feature.'''
 
     def __init__(self, m, data):
         '''Constructor.
@@ -20,17 +20,18 @@ class k_means(object):
         self.m = m
         self.data = data
 
-    def clustering(self, K):
+    def cluster_centroid_initialization(self, K):
+        #Initialize K cluster_centroids by picking K points from dataset
+        cluster_centroids = random.sample(self.data, K)
+        return cluster_centroids
+
+    def clustering(self, K, cluster_centroids):
         '''Cluster assignment and move centroid step. Looks for K clusters in data.
         :param K: Number of clusters algorithm looks for.
         :return mu_K: K-dimensional array with centroid positions.'''
 
-        #Initialize K cluster_centroids by picking K points from dataset
-        cluster_centroids = random.sample(self.data, K)
-
         #Build dictionary: key = number of centroid, value = position of centroid
         clusters_dictionary = {k+1 : cluster_centroids[k] for k in range(0,K)}   #Contains cluster-position value pairs
-        print(clusters_dictionary)
 
         #Initializing indexation dictionary
         assignment_dictionary = {}  #Will contain datapoint-assignment value pairs
@@ -44,9 +45,24 @@ class k_means(object):
                     temp_0 = distance
                 else:
                     pass
-        return assignment_dictionary
+        print(clusters_dictionary)
+        print(assignment_dictionary)
+        #Move centroid step
+        for k in range(1, K+1):
+            list_of_points = []
+            for x, cluster in assignment_dictionary.iteritems():
+                if cluster == k:
+                    list_of_points.append(self.data[x])
+
+
+            average_point = sum(list_of_points)/len(list_of_points)
+            clusters_dictionary[k] = average_point
+
+        print(clusters_dictionary)
 
 
 test_data = np.array([[-1.1],[-2],[-3],[14],[15],[16]])
 test = k_means(6, test_data)
-print(test.clustering(3))
+
+init = test.cluster_centroid_initialization(2)
+print(test.clustering(2, init))
