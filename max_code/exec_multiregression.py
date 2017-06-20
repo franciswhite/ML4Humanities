@@ -63,12 +63,12 @@ print(mv.normal_linear_regression(predictors, independents))
 multiresult=mv.multiclass_logistic_regression(multiclass_predictors,multiclass_independents)
 print(multiresult)
 print(mv.multiclass_predictions(multiclass_predictors, multiresult))
+print(mv.multiclass_predict(2, multiresult))
 
 
 #The following code executes various logic gates implemented as neural networks on toy data if uncommented.
 
 print(mv.neural_network(unsupervised_predictors,mv.neural_XNOR))
-
 
 
 
