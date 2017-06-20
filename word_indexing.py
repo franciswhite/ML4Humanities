@@ -7,21 +7,23 @@ occurrence_tracker = [] #init empty list to note word count where bigram occurs
 first_part = "nope" #init first element of bigram
 with open("toy_corpus.txt", 'r') as temp0:
     for line in temp0:
-        collective_corpus.append(line.split())
+        collective_corpus.append(line.replace('.', " ", 1).replace('?'," ", 1).replace(',', " ", 1).replace(':', " ", 1).replace(';', " ", 1).replace('!', " ", 1).replace("'", " ", 1).split()) #removes points etc
+        print(collective_corpus)
 #upper-case lower-case should not matter!!!
     for line in collective_corpus:
         for word in line:
             word_count += 1
-            if word == "conceptual":
-                print("here1")
+            print(word, word_count)
+            if word.lower() == "conceptual":
                 first_part = "conceptual"
             else:
                 pass
-            if (word == "scheme" or word == "schemata" or word == "schemes") and (first_part == "conceptual"):
+            if ((word.lower() == "scheme") or (word.lower() == "schemata") or (word.lower() == "schemes")) and (first_part.lower() == "conceptual"): #smth wrong with this statement
+                print("here2")
                 occurrence_tracker.append(word_count)
-                first_part = "nope" #setting first word of bigram to not-"conceptual" again
+                first_part = word #setting first word of bigram to not-"conceptual" again
             else:
-                first_part = "nope"
+                first_part = word
                 pass
 
 time_points = np.array(occurrence_tracker)
