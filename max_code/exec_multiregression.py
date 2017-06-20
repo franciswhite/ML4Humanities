@@ -1,4 +1,5 @@
 from ML4Humanities.max_code import multivariate_linear_regression as mv
+import numpy as np
 
 #The following code reads several toy data files if uncommented
 data=mv.get_data('toy_data')
@@ -9,8 +10,16 @@ scaled_predictors=mv.scale(predictors)
 
 logistic_data=mv.get_data('logistic_toy_data')
 logistic_predictors=mv.get_predictors(logistic_data)
-logistic_predictors=mv.scale(logistic_predictors)
+#logistic_predictors=mv.scale(logistic_predictors)
 logistic_independents=mv.get_independents(logistic_data)
+
+multiclass_data=mv.get_data('multiclass_toy_data')
+multiclass_predictors=mv.get_predictors(multiclass_data)
+#multiclass_predictors=(mv.scale(multiclass_predictors))
+multiclass_independents=mv.get_independents(multiclass_data)
+print(multiclass_independents)
+multiclass_independents=mv.multiclass_independents(multiclass_independents)
+print(multiclass_independents)
 
 neural_data=mv.get_data('neural_network_toy')
 unsupervised_predictors=mv.get_unsupervised_predictors(neural_data)
@@ -34,7 +43,26 @@ print(mv.normal_linear_regression(predictors, independents))
 
 #The following code runs multivariate logistic regression using gradient descent on the logistic toy data if uncommented.
 
-print(mv.logistic_regression(logistic_predictors, logistic_independents))
+#result1=mv.logistic_regression(logistic_predictors, logistic_independents)
+
+#The following code runs logistic regressioni using an advanced optimization algorithm
+
+#result2=mv.optimized_logistic_regression(logistic_predictors, logistic_independents)
+
+#The following is to compare the results of gradient descent and the advanced algorithm
+# print(result1)
+# print(result2)
+# print(mv.logistic_predictions(logistic_predictors,result1))
+# print(mv.logistic_predictions(logistic_predictors,np.array( [-36.55161357,   8.14315713])))
+# print(mv.logistic_cost2(result1, logistic_predictors, logistic_independents))
+# print(mv.logistic_cost2(np.array( [-36.55161357,   8.14315713]), logistic_predictors, logistic_independents))
+#print(mv.logistic_cost(mv.logistic_predictions(logistic_predictors,result1), logistic_independents))
+
+
+#The following code runs multiclass logistic regression using gradient descent
+multiresult=mv.multiclass_logistic_regression(multiclass_predictors,multiclass_independents)
+print(multiresult)
+print(mv.multiclass_predictions(multiclass_predictors, multiresult))
 
 
 #The following code executes various logic gates implemented as neural networks on toy data if uncommented.

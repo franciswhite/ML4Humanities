@@ -1,4 +1,6 @@
 import numpy as np
+import scipy.optimize as sci
+import matplotlib.pyplot as matp
 def get_data(datapath):
     """
 
@@ -95,6 +97,22 @@ def scaleind(independents):
     #print(independents)
     return(independents)
 
+def multiclass_independents(independents):
+    initialize=0
+    for i in range (int(np.max(independents)+1)):
+        independents_column=[1 if x==i else 0 for x in independents]
+        if initialize==0:
+            temp_independents=independents_column
+            initialize=1
+        else:
+            temp_independents=np.c_[temp_independents, independents_column]
+        #print(temp_independents)
+    #independents=np.array(temp_independents)
+    #print(temp_independents)
+    return temp_independents
+
+
+
 def multiply_predictors(predictors, i, j):
     """
 
@@ -179,6 +197,7 @@ def logistic_predictions(predictors, parameters):
     :return: an array of predictions for logistic regression
     """
     predictions=1/(1+np.exp((-1)*(np.dot(predictors, parameters))))
+    #print(predictions)
     return predictions
 
 def linear_cost(linear_predictions, independents):
@@ -199,7 +218,42 @@ def logistic_cost(logistic_predictions, independents):
     :param independents: an array of independent variable values
     :return: the cost value (scalar)
     """
-    cost=(-1)/logistic_predictions.shape[0]*(np.dot(independents, np.log(logistic_predictions)+(np.dot((1-independents),np.log(1-logistic_predictions)))))
+    #cost=(-1)/logistic_predictions.shape[0]*(np.dot(independents, np.log(logistic_predictions)+(np.dot((1-independents),np.log(1-logistic_predictions)))))
+    #cost=1/logistic_predictions.shape[0]*(np.dot(-(np.transpose(independents)), np.log(logistic_predictions)-((np.dot(np.transpose(1-independents),np.log(1-logistic_predictions))))))
+    cost=1/logistic_predictions.shape[0]*(-np.dot(np.transpose(independents), np.log(logistic_predictions))-(np.dot(np.transpose(1-independents),np.log(1-logistic_predictions))))
+
+    return cost
+
+def plot_cost(cost, y, li, ax, fig):
+    # fig = matp.figure()
+    # ax = fig.add_subplot(111)
+    # x = np.arange(10000)
+    # y = np.zeros(10000)
+    # li, = ax.plot(x, y)
+    # fig.canvas.draw()
+    # matp.show(block=False)
+
+    y[:-1] = y[1:]
+    y[-1:] =cost
+    li.set_ydata(y)
+    ax.relim()
+    ax.autoscale_view(True,True,False)
+    ax.margins(y=1)
+    fig.canvas.draw()
+    matp.pause(0.01)
+    pass
+
+
+def logistic_cost2(parameters, predictors, independents):
+    """
+
+    :param logistic_predictions: an array of predictions for linear regression
+    :param independents: an array of independent variable values
+    :return: the cost value (scalar)
+    """
+    logistic_predictions=1/(1+np.exp((-1)*(np.dot(predictors, parameters))))
+    #cost=(-1)/logistic_predictions.shape[0]*(np.dot(independents, np.log(logistic_predictions)+(np.dot((1-independents),np.log(1-logistic_predictions)))))
+    cost=1/logistic_predictions.shape[0]*(-np.dot(np.transpose(independents), np.log(logistic_predictions))-(np.dot(np.transpose(1-independents),np.log(1-logistic_predictions))))
     return cost
 
 def linear_cost_derivative(predictors, predictions, independents, checker):
@@ -235,17 +289,20 @@ def logistic_cost_derivative(predictors, predictions, independents, checker):
     :return: Array of partial derivatives of cost function for logistic regression
     """
     temp_cost_derivatives=[]
+    #print(predictors)
+    #print(predictions.shape[0])
     for i in range(predictors.shape[1]):
         if checker[i]==0:
             cost_derivative=0
             temp_cost_derivatives=temp_cost_derivatives+[cost_derivative]
         if checker[i]==1:
-            cost_derivative= np.dot(np.transpose(predictors[:,i]),(predictions.shape[0]*(predictions-independents)))
+            cost_derivative= 1/predictions.shape[0]*np.dot(np.transpose(predictors[:,i]),(predictions-independents))
+            #cost_derivative= (1/predictions.shape[0])*np.dot((predictions-independents),predictors[:,i])
             temp_cost_derivatives=temp_cost_derivatives+[cost_derivative]
     cost_derivatives=np.array(temp_cost_derivatives)
     return cost_derivatives
 
-def gradient_descent(parameters, cost_derivatives, checker, alpha=0.001):
+def gradient_descent(parameters, cost_derivatives, checker, alpha=0.01):
     """
 
     :param parameters: An array containing parameter values
@@ -322,7 +379,7 @@ def linear_regression(predictors, independents):
         #print(parameters)
     return parameters
 
-def logistic_regression(predictors, independents):
+def logistic_regression(predictors, independents, max_iter=1000000, life_graph="n"):
     """
 
     :param predictors: an array of predictors
@@ -332,48 +389,87 @@ def logistic_regression(predictors, independents):
     counter=0
     checker=[1]*predictors.shape[1]
     parameters=[0]*predictors.shape[1]
-    while checker!=[0]*predictors.shape[1]:
-        temp_parameters=gradient_descent(parameters, logistic_cost_derivative(predictors, logistic_predictions(predictors, parameters), independents, checker), checker, alpha=0.01)
-        convergence_checker(checker, temp_parameters, parameters, epsilon=0.001)
+    if life_graph=="y":
+        fig = matp.figure()
+        ax = fig.add_subplot(111)
+        x = np.arange(10000)
+        y = np.zeros(10000)
+        li, = ax.plot(x, y)
+        fig.canvas.draw()
+        matp.show(block=False)
+
+    while checker!=[0]*predictors.shape[1] and counter<=max_iter:
+        predictions=logistic_predictions(predictors, parameters)
+        logistic_cost_derivatives=logistic_cost_derivative(predictors, predictions, independents, checker)
+        #print(logistic_cost_derivatives)
+        temp_parameters=gradient_descent(parameters, logistic_cost_derivatives, checker, alpha=0.01)
+        convergence_checker(checker, temp_parameters, parameters, epsilon=0.0001)
         parameters=temp_parameters
         counter+=1
+        if life_graph=="y":
+            plot_cost(logistic_cost(predictions, independents), y, li, ax, fig)
         #print(checker)
         print(counter)
         #print(parameters)
     #print(parameters)
-
+    #print(predictors)
     return parameters
 
+def multiclass_logistic_regression(predictors, independents_array, max_iter=100000, life_graph="n"):
+    multiparameters=[]
+    for i in range(independents_array.shape[1]):
+        print(independents_array[:,i])
+        independents=independents_array[:,i]
+        counter=0
+        checker=[1]*predictors.shape[1]
+        parameters=[0]*predictors.shape[1]
+        if life_graph=="y":
+            fig = matp.figure()
+            ax = fig.add_subplot(111)
+            x = np.arange(10000)
+            y = np.zeros(10000)
+            li, = ax.plot(x, y)
+            fig.canvas.draw()
+            matp.show(block=False)
 
+        while checker!=[0]*predictors.shape[1] and counter<=max_iter:
+            predictions=logistic_predictions(predictors, parameters)
+            logistic_cost_derivatives=logistic_cost_derivative(predictors, predictions, independents, checker)
+            #print(logistic_cost_derivatives)
+            temp_parameters=gradient_descent(parameters, logistic_cost_derivatives, checker, alpha=0.01)
+            convergence_checker(checker, temp_parameters, parameters, epsilon=0.000000001)
+            parameters=temp_parameters
+            counter+=1
+            if life_graph=="y":
+                plot_cost(logistic_cost(predictions, independents), y, li, ax, fig)
+            #print(checker)
+            print(counter)
+            #print(parameters)
+        #print(parameters)
+        #print(predictors)
+        multiparameters=multiparameters+[parameters]
+    return np.array(multiparameters)
 
+def multiclass_predictions(predictors, parameters_array):
+    initialize=0
+    print(parameters_array.shape[0])
+    for i in range(parameters_array.shape[0]):
+        predictions=1/(1+np.exp((-1)*(np.dot(predictors, parameters_array[i]))))
+        print(predictions)
+        if initialize==0:
+            predictions_array=predictions
+            initialize=1
+        else:
+            predictions_array=np.c_[predictions_array, predictions]
+    return predictions_array
 
-# def gradient_descent(predictors, independents, alpha=0.001, epsilon=0.000001):
-#     """
-#
-#     :param predictors: An array containing predictor values
-#     :param independents: An array containting independent values
-#     :return: optimal predictor parameters
-#     """
-#     #Initializing variables
-#     parameters=np.zeros(predictors.shape[1])
-#     checker=[1]*predictors.shape[1]
-#     temp_parameters=[1]*predictors.shape[1]
-#     counter=0
-#     while checker!=[0]*predictors.shape[1]:#Stop when convergence occurs
-#         #Using vector and matrix methods
-#         predictions=np.dot(predictors, parameters)
-#         for i in range(predictors.shape[1]):
-#             if checker[i]==1:
-#                 derivative=np.dot(np.transpose(predictors[:,i]),(predictions.shape[0]*(predictions-independents)))
-#                 temp_parameters[i]=parameters[i]-alpha*derivative
-#             if abs(temp_parameters[i]-parameters[i])<epsilon:#check for convergence
-#                 checker[i]=0
-#            # print(temp_parameters)
-#         parameters=np.array(temp_parameters)
-#         counter+=1
-#         print(counter)
-#         #print(parameters)
-#     return parameters
+def optimized_logistic_regression(predictors, independents):
+    parameters=np.array([0]*predictors.shape[1])
+    #logistic_cost(logistic_predictions(predictors, parameters).__call__
+    #print(type(logistic_cost(logistic_predictions(predictors, parameters), independents)))
+    logistic_predictions1=logistic_predictions(predictors, parameters)
+    final_parameters=sci.minimize(logistic_cost2, parameters, args=(predictors, independents), method='Nelder-Mead')
+    return final_parameters
 
 
 def normal_linear_regression(predictors, independents):
