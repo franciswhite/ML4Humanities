@@ -108,9 +108,8 @@ def multiclass_independents(independents):
             temp_independents=np.c_[temp_independents, independents_column]
         #print(temp_independents)
     #independents=np.array(temp_independents)
-    #print(temp_independents)
+    print(temp_independents)
     return temp_independents
-
 
 
 def multiply_predictors(predictors, i, j):
@@ -200,14 +199,17 @@ def logistic_predictions(predictors, parameters):
     #print(predictions)
     return predictions
 
-def linear_cost(linear_predictions, independents):
+def linear_cost(linear_predictions, independents, reg=0, parameters=np.zeros(1)):
     """
 
     :param linear_predictions: an array of predictions for linear regression
     :param independents: an array of independent variable values
     :return: the cost value (scalar)
     """
-    cost= 1/linear_predictions.shape[0]*np.sum(1/2*(linear_predictions-independents)**2)
+    if reg==0:
+        cost= 1/(2*linear_predictions.shape[0])*np.sum(1/2*(linear_predictions-independents)**2)
+    else:
+        cost= 1/(2*linear_predictions.shape[0])*np.sum(1/2*(linear_predictions-independents)**2)+reg*np.sum(parameters**2)
     return cost
 
 
@@ -272,7 +274,7 @@ def linear_cost_derivative(predictors, predictions, independents, checker):
             cost_derivative=0
             temp_cost_derivatives=temp_cost_derivatives+[cost_derivative]
         if checker[i]==1:
-            cost_derivative= np.dot(np.transpose(predictors[:,i]),(predictions.shape[0]*(predictions-independents)))
+            cost_derivative= 1/predictions.shape[0]*np.dot(np.transpose(predictors[:,i]),(predictions.shape[0]*(predictions-independents)))
             #print(cost_derivative)
             temp_cost_derivatives=temp_cost_derivatives+[cost_derivative]
     cost_derivatives=np.array(temp_cost_derivatives)
@@ -302,20 +304,29 @@ def logistic_cost_derivative(predictors, predictions, independents, checker):
     cost_derivatives=np.array(temp_cost_derivatives)
     return cost_derivatives
 
-def gradient_descent(parameters, cost_derivatives, checker, alpha=0.01):
+def gradient_descent(parameters, cost_derivatives, checker, alpha=0.01, reg=0, number_of_values=0):
     """
 
     :param parameters: An array containing parameter values
-    :param cost: An array containting cost derivative values
+    :param cost_derivatives: An array containting cost derivative values
     :param checker: a list of convergence checkers
     :param alpha: a float representing the learning rate
     :return: updated parameters after performing one step of gradient descent
     """
     temp_parameters=[i for i in parameters]
-    for i in range(len(checker)):
-        if checker[i]==1:
-            temp_parameters[i]=parameters[i]-alpha*cost_derivatives[i]
-    temp_parameters=np.array(temp_parameters)
+    if reg==0:
+        for i in range(len(checker)):
+            if checker[i]==1:
+                temp_parameters[i]=parameters[i]-alpha*cost_derivatives[i]
+        temp_parameters=np.array(temp_parameters)
+    else:
+        for i in range(len(checker)):
+            if checker[i]==1:
+                if i==0:
+                    temp_parameters[i]=parameters[i]-alpha*cost_derivatives[i]
+                else:
+                    temp_parameters[i]=parameters[i]*(1-alpha*reg/number_of_values)-alpha*cost_derivatives[i]
+        temp_parameters=np.array(temp_parameters)
     #print(parameters)
     return temp_parameters
 
