@@ -28,7 +28,7 @@ class k_means(object):
     def clustering(self, K, cluster_centroids):
         '''Cluster assignment and move centroid step. Looks for K clusters in data.
         :param K: Number of clusters algorithm looks for.
-        :return mu_K: K-dimensional array with centroid positions.'''
+        :return cluster_centroid_output: K-dimensional array with centroid positions.'''
 
         #Build dictionary: key = number of centroid, value = position of centroid
         clusters_dictionary = {k+1 : cluster_centroids[k] for k in range(0,K)}   #Contains cluster-position value pairs
@@ -45,8 +45,6 @@ class k_means(object):
                     temp_0 = distance
                 else:
                     pass
-        print(clusters_dictionary)
-        print(assignment_dictionary)
         #Move centroid step
         for k in range(1, K+1):
             list_of_points = []
@@ -54,15 +52,37 @@ class k_means(object):
                 if cluster == k:
                     list_of_points.append(self.data[x])
 
-
             average_point = sum(list_of_points)/len(list_of_points)
             clusters_dictionary[k] = average_point
 
-        print(clusters_dictionary)
+        cluster_centroid_output = np.arange(K)
+        for k in range(0,K):
+            cluster_centroid_output[k] = clusters_dictionary[k+1]
+        return cluster_centroid_output
+
+    def find_clusters(self, K):
+        '''Finds locally optimal clusters.
+        :param K: Number of clusters.
+        :return final_cluster_centroids: K dimensional array with final centroid positions.'''
+        init = self.cluster_centroid_initialization(K)
+        iterations = 100
+        for i in range(0,iterations):
+            temp0 = self.clustering(K, init)
+            init = temp0
+        return temp0
 
 
-test_data = np.array([[-1.1],[-2],[-3],[14],[15],[16]])
-test = k_means(6, test_data)
+# test_data = np.array([[-1.1],[-2],[-3],[14],[15],[16]])
+# test = k_means(6, test_data)
+#
+# init = test.cluster_centroid_initialization(2)
+# print(test.clustering(2, init))
 
-init = test.cluster_centroid_initialization(2)
-print(test.clustering(2, init))
+test_data_2 = np.array([[2],[4],[80],[82]])
+test2 = k_means(4, test_data_2)
+initialize = test2.cluster_centroid_initialization(2)
+print(initialize)
+clustering_step = test2.clustering(2, initialize)
+print(clustering_step)
+runit = test2.find_clusters(2)
+print(runit)
