@@ -499,17 +499,22 @@ def optimized_logistic_regression(predictors, independents):
     return final_parameters
 
 
-def normal_linear_regression(predictors, independents):
+def normal_linear_regression(predictors, independents, reg=0):
     """
 
     :param predictors: an array of predictors
     :param independents: an array of binary/categorical independent values
     :return: Optimal parameters arrived at through linear regression using the normal equation
     """
-
-    transposed_predictors=np.transpose(predictors)
-    parameters= np.dot(np.linalg.inv(np.dot(transposed_predictors,predictors)),np.dot(transposed_predictors, independents))
-
+    if reg==0:
+        transposed_predictors=np.transpose(predictors)
+        parameters= np.dot(np.linalg.inv(np.dot(transposed_predictors,predictors)),np.dot(transposed_predictors, independents))
+    else:
+        transposed_predictors=np.transpose(predictors)
+        reg_matrix=np.identity(transposed_predictors.shape[0])
+        #reg_matrix=np.put(reg_matrix,[0], [0])
+        reg_matrix.flat[0]=0
+        parameters= np.dot(np.linalg.inv(np.dot(transposed_predictors,predictors)+reg*reg_matrix),np.dot(transposed_predictors, independents))
     return parameters
 
 

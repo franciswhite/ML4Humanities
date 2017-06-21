@@ -17,9 +17,8 @@ multiclass_data=mv.get_data('multiclass_toy_data')
 multiclass_predictors=mv.get_predictors(multiclass_data)
 #multiclass_predictors=(mv.scale(multiclass_predictors))
 multiclass_independents=mv.get_independents(multiclass_data)
-print(multiclass_independents)
 multiclass_independents=mv.multiclass_independents(multiclass_independents)
-print(multiclass_independents)
+
 
 neural_data=mv.get_data('neural_network_toy')
 unsupervised_predictors=mv.get_unsupervised_predictors(neural_data)
@@ -60,10 +59,10 @@ print(mv.normal_linear_regression(predictors, independents))
 
 
 #The following code runs multiclass logistic regression using gradient descent
-multiresult=mv.multiclass_logistic_regression(multiclass_predictors,multiclass_independents)
-print(multiresult)
-print(mv.multiclass_predictions(multiclass_predictors, multiresult))
-print(mv.multiclass_predict(2, multiresult))
+#multiresult=mv.multiclass_logistic_regression(multiclass_predictors,multiclass_independents)
+#print(multiresult)
+#print(mv.multiclass_predictions(multiclass_predictors, multiresult))
+#print(mv.multiclass_predict(2, multiresult))
 
 
 #The following code executes various logic gates implemented as neural networks on toy data if uncommented.
