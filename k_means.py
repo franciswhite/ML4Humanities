@@ -1,5 +1,6 @@
 import numpy as np
 import random
+from word_indexing import word_indexer
 # x = np.array([2,2])
 # a = np.linalg.norm(x, ord=2)
 
@@ -38,7 +39,7 @@ class k_means(object):
 
         for x in range(0, self.m):
             temp_0 = 1000000  # Initialize minimal distance
-            for k in range(1,K+1):
+            for k in range(1, K+1):
                 distance = np.linalg.norm((self.data[x] - clusters_dictionary[k]), ord=2)
                 if distance <= temp_0:
                     assignment_dictionary.update({x : k})
@@ -101,14 +102,17 @@ class k_means(object):
 #
 # init = test.cluster_centroid_initialization(2)
 # print(test.clustering(2, init))
+#
+# test_data_2 = word_indexer("//home//sh//Desktop//june_project//data_quine//all_texts//1953e_On Mental Entities_Quine (1).txt")
+#
+# test2 = k_means(3, test_data_2)
+# initialize = test2.cluster_centroid_initialization(2)
+# print(initialize)
+#
+# clustering_step = test2.clustering(2, initialize)
+# print(clustering_step)
+# runit = test2.find_clusters(2)
+# print(runit)
+# cost = test2.distorsion_function(2, runit)
+# print(cost)
 
-test_data_2 = np.array([[2],[4],[80],[82]])
-test2 = k_means(4, test_data_2)
-initialize = test2.cluster_centroid_initialization(2)
-print(initialize)
-clustering_step = test2.clustering(2, initialize)
-print(clustering_step)
-runit = test2.find_clusters(2)
-print(runit)
-cost = test2.distorsion_function(2, runit)
-print(cost)

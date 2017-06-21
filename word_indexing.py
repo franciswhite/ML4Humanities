@@ -31,7 +31,7 @@ def word_indexer(data_path):
                     first_part = word
                     pass
 
-    time_points = np.array(occurrence_tracker)
+    time_points = np.array(occurrence_tracker)[np.newaxis].T
     return time_points
 
-print(word_indexer("toy_corpus.txt"))
+# print(word_indexer("toy_corpus.txt"))
