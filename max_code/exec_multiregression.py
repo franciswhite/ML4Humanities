@@ -10,7 +10,7 @@ scaled_predictors=mv.scale(predictors)
 
 logistic_data=mv.get_data('logistic_toy_data')
 logistic_predictors=mv.get_predictors(logistic_data)
-#logistic_predictors=mv.scale(logistic_predictors)
+logistic_predictors=mv.scale(logistic_predictors)
 logistic_independents=mv.get_independents(logistic_data)
 
 multiclass_data=mv.get_data('multiclass_toy_data')
@@ -34,27 +34,27 @@ unsupervised_predictors=mv.get_unsupervised_predictors(neural_data)
 
 #The following code runs multivariate linear regression using gradient descent on the toy data if uncommented.
 
-print(mv.linear_regression(scaled_predictors, scaled_independents))
+print(mv.linear_regression(scaled_predictors, scaled_independents, 0, predictors.shape[0]))
 
 #The following code runs multivariate linear regression using the normal equation on the toy data if uncommented.
 
-print(mv.normal_linear_regression(predictors, independents))
+print(mv.normal_linear_regression(predictors, independents, 0))
 
 #The following code runs multivariate logistic regression using gradient descent on the logistic toy data if uncommented.
 
-#result1=mv.logistic_regression(logistic_predictors, logistic_independents)
+result1=mv.logistic_regression(logistic_predictors, logistic_independents, 0.01, logistic_predictors.shape[0])
 
 #The following code runs logistic regressioni using an advanced optimization algorithm
 
-#result2=mv.optimized_logistic_regression(logistic_predictors, logistic_independents)
+result2=mv.optimized_logistic_regression(logistic_predictors, logistic_independents, 1)
 
 #The following is to compare the results of gradient descent and the advanced algorithm
-# print(result1)
-# print(result2)
-# print(mv.logistic_predictions(logistic_predictors,result1))
-# print(mv.logistic_predictions(logistic_predictors,np.array( [-36.55161357,   8.14315713])))
-# print(mv.logistic_cost2(result1, logistic_predictors, logistic_independents))
-# print(mv.logistic_cost2(np.array( [-36.55161357,   8.14315713]), logistic_predictors, logistic_independents))
+print(result1)
+print(result2)
+print(mv.logistic_predictions(logistic_predictors,result1))
+print(mv.logistic_predictions(logistic_predictors,np.array( [ 0.12378762,  1.50871727])))
+print(mv.logistic_cost2(result1, logistic_predictors, logistic_independents))
+print(mv.logistic_cost2(np.array( [ 0.12378762,  1.50871727]), logistic_predictors, logistic_independents))
 #print(mv.logistic_cost(mv.logistic_predictions(logistic_predictors,result1), logistic_independents))
 
 

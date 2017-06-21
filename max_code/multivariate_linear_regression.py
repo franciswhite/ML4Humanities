@@ -213,7 +213,7 @@ def linear_cost(linear_predictions, independents, reg=0, parameters=np.zeros(1))
     return cost
 
 
-def logistic_cost(logistic_predictions, independents):
+def logistic_cost(logistic_predictions, independents, reg=0, parameters=np.zeros(1)):
     """
 
     :param logistic_predictions: an array of predictions for linear regression
@@ -222,7 +222,10 @@ def logistic_cost(logistic_predictions, independents):
     """
     #cost=(-1)/logistic_predictions.shape[0]*(np.dot(independents, np.log(logistic_predictions)+(np.dot((1-independents),np.log(1-logistic_predictions)))))
     #cost=1/logistic_predictions.shape[0]*(np.dot(-(np.transpose(independents)), np.log(logistic_predictions)-((np.dot(np.transpose(1-independents),np.log(1-logistic_predictions))))))
-    cost=1/logistic_predictions.shape[0]*(-np.dot(np.transpose(independents), np.log(logistic_predictions))-(np.dot(np.transpose(1-independents),np.log(1-logistic_predictions))))
+    if reg==0:
+        cost=1/logistic_predictions.shape[0]*(-np.dot(np.transpose(independents), np.log(logistic_predictions))-(np.dot(np.transpose(1-independents),np.log(1-logistic_predictions))))
+    else:
+        cost=1/logistic_predictions.shape[0]*(-np.dot(np.transpose(independents), np.log(logistic_predictions))-(np.dot(np.transpose(1-independents),np.log(1-logistic_predictions))))+reg/(2*logistic_predictions.shape[0])*np.sum(np.square(parameters[1:]))
 
     return cost
 
@@ -246,7 +249,7 @@ def plot_cost(cost, y, li, ax, fig):
     pass
 
 
-def logistic_cost2(parameters, predictors, independents):
+def logistic_cost2(parameters, predictors, independents, reg=0):
     """
 
     :param logistic_predictions: an array of predictions for linear regression
@@ -255,7 +258,10 @@ def logistic_cost2(parameters, predictors, independents):
     """
     logistic_predictions=1/(1+np.exp((-1)*(np.dot(predictors, parameters))))
     #cost=(-1)/logistic_predictions.shape[0]*(np.dot(independents, np.log(logistic_predictions)+(np.dot((1-independents),np.log(1-logistic_predictions)))))
-    cost=1/logistic_predictions.shape[0]*(-np.dot(np.transpose(independents), np.log(logistic_predictions))-(np.dot(np.transpose(1-independents),np.log(1-logistic_predictions))))
+    if reg==0:
+        cost=1/logistic_predictions.shape[0]*(-np.dot(np.transpose(independents), np.log(logistic_predictions))-(np.dot(np.transpose(1-independents),np.log(1-logistic_predictions))))
+    else:
+        cost=1/logistic_predictions.shape[0]*(-np.dot(np.transpose(independents), np.log(logistic_predictions))-(np.dot(np.transpose(1-independents),np.log(1-logistic_predictions))))+reg/(2*logistic_predictions.shape[0])*np.sum(np.square(parameters[1:]))
     return cost
 
 def linear_cost_derivative(predictors, predictions, independents, checker):
@@ -367,7 +373,7 @@ def convergence_checker(checker, temp_parameters, parameters, epsilon=0.0001):
  #   parameters=temp_parameters
   #  return parameters
 
-def linear_regression(predictors, independents):
+def linear_regression(predictors, independents, reg=0, number_of_values=0):
     """
 
     :param predictors: an array of predictors
@@ -378,7 +384,7 @@ def linear_regression(predictors, independents):
     checker=[1]*predictors.shape[1]
     parameters=[0]*predictors.shape[1]
     while checker!=[0]*predictors.shape[1]:
-        temp_parameters=gradient_descent(parameters, linear_cost_derivative(predictors, linear_predictions(predictors, parameters), independents, checker), checker, alpha=0.01)
+        temp_parameters=gradient_descent(parameters, linear_cost_derivative(predictors, linear_predictions(predictors, parameters), independents, checker), checker, 0.01, reg, number_of_values)
         #print(temp_parameters)
         #print(parameters)
         convergence_checker(checker, temp_parameters, parameters, epsilon=0.0001)
@@ -390,7 +396,7 @@ def linear_regression(predictors, independents):
         #print(parameters)
     return parameters
 
-def logistic_regression(predictors, independents, max_iter=1000000, life_graph="n"):
+def logistic_regression(predictors, independents, reg=0, number_of_values=0, max_iter=100000, life_graph="n"):
     """
 
     :param predictors: an array of predictors
@@ -413,8 +419,8 @@ def logistic_regression(predictors, independents, max_iter=1000000, life_graph="
         predictions=logistic_predictions(predictors, parameters)
         logistic_cost_derivatives=logistic_cost_derivative(predictors, predictions, independents, checker)
         #print(logistic_cost_derivatives)
-        temp_parameters=gradient_descent(parameters, logistic_cost_derivatives, checker, alpha=0.01)
-        convergence_checker(checker, temp_parameters, parameters, epsilon=0.0001)
+        temp_parameters=gradient_descent(parameters, logistic_cost_derivatives, checker, 0.01, reg, number_of_values)
+        convergence_checker(checker, temp_parameters, parameters, epsilon=0.00001)
         parameters=temp_parameters
         counter+=1
         if life_graph=="y":
@@ -490,12 +496,12 @@ def multiclass_predict(value, parameters_array):
 
 
 
-def optimized_logistic_regression(predictors, independents):
+def optimized_logistic_regression(predictors, independents, reg=0):
     parameters=np.array([0]*predictors.shape[1])
     #logistic_cost(logistic_predictions(predictors, parameters).__call__
     #print(type(logistic_cost(logistic_predictions(predictors, parameters), independents)))
     logistic_predictions1=logistic_predictions(predictors, parameters)
-    final_parameters=sci.minimize(logistic_cost2, parameters, args=(predictors, independents), method='Nelder-Mead')
+    final_parameters=sci.minimize(logistic_cost2, parameters, args=(predictors, independents, reg), method='Nelder-Mead')
     return final_parameters
 
 
