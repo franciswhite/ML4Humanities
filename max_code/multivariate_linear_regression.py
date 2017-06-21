@@ -463,6 +463,22 @@ def multiclass_predictions(predictors, parameters_array):
             predictions_array=np.c_[predictions_array, predictions]
     return predictions_array
 
+def multiclass_predict(value, parameters_array):
+    initialize=0
+    value_array=np.array([1, value])
+    for i in range(parameters_array.shape[0]):
+        prediction=1/(1+np.exp((-1)*(np.dot(value_array, parameters_array[i]))))
+        if initialize==0:
+            prediction_array=prediction
+            initialize=1
+        else:
+            prediction_array=np.c_[prediction_array, prediction]
+    prediction_index=[np.argmax(prediction_array),np.max((prediction_array))]
+    return prediction_index
+
+
+
+
 def optimized_logistic_regression(predictors, independents):
     parameters=np.array([0]*predictors.shape[1])
     #logistic_cost(logistic_predictions(predictors, parameters).__call__
