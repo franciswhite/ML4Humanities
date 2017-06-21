@@ -71,6 +71,30 @@ class k_means(object):
             init = temp0
         return temp0
 
+    def distorsion_function(self, K, cluster_centroids):
+        '''Compute cost given data and K cluster centroids with their associated datapoints.
+        First, compute dictionaries again; second, compute cost.
+        :param cluster_centroids: K cluster centroids.
+        :param K: Number of cluster centroids.
+        :return total_distorsion: Mean squared distance from assigned cluster centroids.'''
+
+        clusters_dictionary = {k+1 : cluster_centroids[k] for k in range(0,K)}   #Contains cluster-position value pairs
+        assignment_dictionary = {}  #Will contain datapoint-assignment value pairs
+        for x in range(0, self.m):
+            temp_0 = 1000000  # Initialize minimal distance
+            for k in range(1,K+1):
+                distance = np.linalg.norm((self.data[x] - clusters_dictionary[k]), ord=2)
+                if distance <= temp_0:
+                    assignment_dictionary.update({x : k})
+                    temp_0 = distance
+
+        total_distorsion = 0.0      #Initialize total cost
+        for x in range(0, self.m):
+            associated_cluster = assignment_dictionary[x]
+            distance2 = self.data[x] - clusters_dictionary[associated_cluster]
+            total_distorsion += np.linalg.norm(distance2, ord=2)
+        total_distorsion = total_distorsion / self.m
+        return total_distorsion
 
 # test_data = np.array([[-1.1],[-2],[-3],[14],[15],[16]])
 # test = k_means(6, test_data)
@@ -86,3 +110,5 @@ clustering_step = test2.clustering(2, initialize)
 print(clustering_step)
 runit = test2.find_clusters(2)
 print(runit)
+cost = test2.distorsion_function(2, runit)
+print(cost)
