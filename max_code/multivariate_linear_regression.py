@@ -207,9 +207,9 @@ def linear_cost(linear_predictions, independents, reg=0, parameters=np.zeros(1))
     :return: the cost value (scalar)
     """
     if reg==0:
-        cost= 1/(2*linear_predictions.shape[0])*np.sum(1/2*(linear_predictions-independents)**2)
+        cost= 1/(2*linear_predictions.shape[0])*np.sum(np.multiply(1/2,np.square(linear_predictions-independents)))
     else:
-        cost= 1/(2*linear_predictions.shape[0])*np.sum(1/2*(linear_predictions-independents)**2)+reg*np.sum(parameters**2)
+        cost= 1/(2*linear_predictions.shape[0])*np.sum(np.multiply(1/2,np.square(linear_predictions-independents)))+reg*np.sum(np.square(parameters[1:]))
     return cost
 
 
