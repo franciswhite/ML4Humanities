@@ -14,7 +14,6 @@ def word_indexer(data_path):
         for line in temp0:
             #collective_corpus.append(line.replace('.', " ", 1).replace('?'," ", 1).replace(',', " ", 1).replace(':', " ", 1).replace(';', " ", 1).replace('!', " ", 1).replace("'", " ", 1).split()) #removes points etc
             collective_corpus.append(line.translate(None, string.punctuation))
-    #upper-case lower-case should not matter!!!
         for line in collective_corpus:
             line = line.split(" ")
             for word in line:
@@ -30,6 +29,7 @@ def word_indexer(data_path):
                 else:
                     first_part = word
                     pass
+
 
     time_points = np.array(occurrence_tracker)[np.newaxis].T
     return time_points

@@ -99,7 +99,8 @@ class k_means(object):
     def robust_centroids(self, K):
         '''Finds K centroids for 100 different initalizations. Picks that set of centroids with minimal distorsion.
         :param K: Number of centroids.
-        :return robust_centroids: Array of optimal centroids.'''
+        :return optimal_centroids: Array of optimal centroids.
+        :return optimal_cost: Distorsion optimal centroids incur.'''
         init_cost = pow(10,100)
         for i in range(0,100):
             temp_clusters = self.find_clusters(K)
@@ -110,7 +111,7 @@ class k_means(object):
                 init_cost = temp_cost
             else:
                 pass
-        return optimal_centroids
+        return init_cost#, optimal_centroids        Now just outputs cost, could also output actual position of centroids!
 
 test_data = np.array([[-1.1],[-2],[-3],[14],[15],[16]])
 test = k_means(6, test_data)
@@ -130,7 +131,7 @@ test = k_means(6, test_data)
 # print(runit)
 # cost = test2.distorsion_function(2, runit)
 # print(cost)
-
-a = test.robust_centroids(2)
-print(a)
+#
+# a = test.robust_centroids(2)
+# print(a)
 

@@ -19,7 +19,7 @@ filenames.sort(key=natural_keys)
 
 
 
-with open('/home//sh/Desktop/june_project/data_quine/all_texts/text_all', 'w') as outfile:
+with open('/home//sh/Desktop/june_project/data_quine/all_texts/text_all.txt', 'w') as outfile:
     for fname in filenames:
         with open(fname) as infile:
             for line in infile:
