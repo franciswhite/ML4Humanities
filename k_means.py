@@ -1,9 +1,8 @@
 import numpy as np
 import random
 from word_indexing import word_indexer
-# x = np.array([2,2])
-# a = np.linalg.norm(x, ord=2)
-
+import operator
+from math import pow
 ###Thangs to do:
 #1. k-means: cluster assignment step, move centroid step
 #2. cost function
@@ -97,8 +96,24 @@ class k_means(object):
         total_distorsion = total_distorsion / self.m
         return total_distorsion
 
-# test_data = np.array([[-1.1],[-2],[-3],[14],[15],[16]])
-# test = k_means(6, test_data)
+    def robust_centroids(self, K):
+        '''Finds K centroids for 100 different initalizations. Picks that set of centroids with minimal distorsion.
+        :param K: Number of centroids.
+        :return robust_centroids: Array of optimal centroids.'''
+        init_cost = pow(10,100)
+        for i in range(0,100):
+            temp_clusters = self.find_clusters(K)
+            temp_cost = self.distorsion_function(K, temp_clusters)
+
+            if temp_cost < init_cost:
+                optimal_centroids = temp_clusters
+                init_cost = temp_cost
+            else:
+                pass
+        return optimal_centroids
+
+test_data = np.array([[-1.1],[-2],[-3],[14],[15],[16]])
+test = k_means(6, test_data)
 #
 # init = test.cluster_centroid_initialization(2)
 # print(test.clustering(2, init))
@@ -115,4 +130,7 @@ class k_means(object):
 # print(runit)
 # cost = test2.distorsion_function(2, runit)
 # print(cost)
+
+a = test.robust_centroids(2)
+print(a)
 
