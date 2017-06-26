@@ -13,26 +13,24 @@ def natural_keys(text):
     '''
     return [ atoi(c) for c in re.split('(\d+)', text) ]
 filenames.sort(key=natural_keys)
+import numpy as np
 
 
 
-word_count_at_start = []
-number_files = 0
-number_words = 0
-with open('/home//sh/Desktop/june_project/data_quine/all_texts/text_allreasdfsdf.txt', 'w') as outfile:
-    for fname in filenames:
-        number_files += 1
-        with open(fname) as infile:
-            word_count_at_start.append(number_words)
-            word_count_at_start.append(fname)
-
-            for line in infile:
-                line = line.split()
-                for words in line:
-                    number_words += 1
-
-print(number_files)
-print(word_count_at_start)
+# word_count_at_start = []
+# number_files = 0
+# number_words = 0
+# with open('/home//sh/Desktop/june_project/data_quine/all_texts/text_allreasdfsdf.txt', 'w') as outfile:
+#     for fname in filenames:
+#         number_files += 1
+#         with open(fname) as infile:
+#             word_count_at_start.append(number_words)
+#             word_count_at_start.append(fname)
+#
+#             for line in infile:
+#                 line = line.split()
+#                 for words in line:
+#                     number_words += 1
 
 def mapping(word_count):
     '''Maps word count to real time.'''
@@ -84,3 +82,15 @@ def mapping(word_count):
         return 1959
     if 437241 <= word_count < 548677:
         return 1960
+
+
+def real_time(list):
+    '''Takes list/array of word counts and turns it into list of real time.'''
+    real_time = []
+    for i in range(0,len(list)):
+        temp0 = mapping(list[i])
+        real_time.append(temp0)
+    return real_time
+
+
+
