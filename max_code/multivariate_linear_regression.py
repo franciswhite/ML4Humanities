@@ -625,8 +625,11 @@ def neural_cost(parameter_matrices, predictions, independents, reg):
     neural_cost=0
     regularization=0
     #predictions=untrained_neural_network(predictors, parameter_matrices)
-    for i in range(len(predictions)):
-        neural_cost+=logistic_cost(predictions[i], independents, 0)
+    for i in range(predictions[-1].shape[0]):
+        print("Predictions[-1][i]",predictions[-1][i])
+        print("independens", independents)
+        neural_cost+=logistic_cost(predictions[-1][i], independents, 0)
+        print("neural cost", neural_cost)
     if reg!=0:
         for i in len(parameter_matrices):
             #reg_parameter_matrix=np.c_(parameter_matrices[i])
