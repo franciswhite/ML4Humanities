@@ -204,6 +204,8 @@ def linear_cost(linear_predictions, independents, reg=0, parameters=np.zeros(1))
 
     :param linear_predictions: an array of predictions for linear regression
     :param independents: an array of independent variable values
+    :param reg: a regularization value. If 0 no regularization is applied
+    :param parameters: an array of parameters. Only needed if regularization is wished.
     :return: the cost value (scalar)
     """
     if reg==0:
@@ -317,6 +319,8 @@ def gradient_descent(parameters, cost_derivatives, checker, alpha=0.01, reg=0, n
     :param cost_derivatives: An array containting cost derivative values
     :param checker: a list of convergence checkers
     :param alpha: a float representing the learning rate
+    :param reg: the regularization constant. No regularization if 0
+    :param number_of values: needed for regularization. Set to predictors.shape[0]
     :return: updated parameters after performing one step of gradient descent
     """
     temp_parameters=[i for i in parameters]
@@ -424,7 +428,7 @@ def logistic_regression(predictors, independents, reg=0, number_of_values=0, max
         parameters=temp_parameters
         counter+=1
         if life_graph=="y":
-            plot_cost(logistic_cost(predictions, independents), y, li, ax, fig)
+            plot_cost(logistic_cost(predictions, independents, reg, parameters), y, li, ax, fig)
         #print(checker)
         print(counter)
         #print(parameters)
@@ -432,7 +436,7 @@ def logistic_regression(predictors, independents, reg=0, number_of_values=0, max
     #print(predictors)
     return parameters
 
-def multiclass_logistic_regression(predictors, independents_array, max_iter=100000, life_graph="n"):
+def multiclass_logistic_regression(predictors, independents_array, reg=0, max_iter=100000, life_graph="n"):
     multiparameters=[]
     for i in range(independents_array.shape[1]):
         print(independents_array[:,i])
@@ -458,7 +462,7 @@ def multiclass_logistic_regression(predictors, independents_array, max_iter=1000
             parameters=temp_parameters
             counter+=1
             if life_graph=="y":
-                plot_cost(logistic_cost(predictions, independents), y, li, ax, fig)
+                plot_cost(logistic_cost(predictions, independents, reg, parameters), y, li, ax, fig)
             #print(checker)
             print(counter)
             #print(parameters)
@@ -609,6 +613,149 @@ def neural_NAND(predictors):
     predictions=1/(1+np.exp((-1)*(np.dot(predictors, weights))))
     return predictions
 
+def neural_cost(parameter_matrices, predictions, independents, reg):
+    """
+
+    :param parameter_matrices: A list of parameter/weights matrices
+    :param predictions: A list of arrays of predicted values
+    :param untrained_neural_network: A function providing a neural network
+    :param reg: 0 to turn regularization off. Desired value of regularization constant else.
+    :return: a float: A cost value
+    """
+    neural_cost=0
+    regularization=0
+    #predictions=untrained_neural_network(predictors, parameter_matrices)
+    for i in predictions.shape[0]:
+        neural_cost+=logistic_cost(predictions[i], independents, 0)
+    if reg!=0:
+        for i in len(parameter_matrices):
+            #reg_parameter_matrix=np.c_(parameter_matrices[i])
+            regularization+= np.sum(reg/(2*independents.shape[0])*np.square(parameter_matrices[i][1:]))
+    neural_cost=neural_cost+regularization
+    return neural_cost
+
+def neural_architecture(layers, units, epsilon=0.001):
+    """
+
+    :param layers: an integer: number of layers.
+    :param units: a list of length "layers", specifying the number of units per layer (without bias unit). Input units should be predictors.shape[1]; output units should be independents_array.shape[1].
+    :param epsilon: a parameter for random initialization.
+    :return: a randomly initialized list of parameter matrices specifying a neural architecture.
+    """
+    architecture=[]
+    for i in range(layers):
+        layer=(np.random.uniform(0,1,(units[i]+1,units[i+1]))*2*epsilon)-epsilon
+        architecture=architecture+layer
+    return architecture
+
+
+def forward_propagation(predictor, architecture):
+    """
+
+    :param predictor: An array containing ONE predictor value
+    :param architecture: a list of parameter matrices specifying a neural architecture
+    :return: the neural network's hidden activations and predictions as a list of arrays
+    """
+    prediction=[]
+    for i in range(len(architecture)):
+        predictor=1/(1+np.exp((-1)*(np.dot(predictor, architecture[i]))))
+        predictor=np.c_[np.ones(predictor.shape[0]), predictor]
+        prediction=prediction+predictor
+    return prediction
+
+def backward_propagation(prediction, architecture, independent):
+    """
+
+    :param prediction: an array: Prediction for ONE predictor value
+    :param architecture: a list of parameter matrices specifying a neural architecture
+    :param independent: an array: (Multiclass) Independent value correcponding to predictor value
+    :return: The errors of the neural network
+    """
+    delta=prediction[-1]-independent
+    deltas=[]
+    deltas=deltas+delta
+    for i in range(len(architecture)-2): #check the indexing later
+        delta=np.dot(np.transpose(architecture[len(architecture)-i]),delta)*prediction[-(i+2)]*(1-prediction[-(i+2)])
+        deltas=delta+deltas
+    return deltas
+
+def neural_derivatives(prediction, deltas, architecture):
+    """
+
+    :param prediction: n array: Prediction for ONE predictor value
+    :param deltas: a list of arrays of errors
+    :param architecture: list of parameter matrices specifying a neural architecture
+    :return: A list of matrices (arrays) of partial derivatives of errors for each parameter
+    """
+    derivatives=[]
+    for i in range(len(architecture)): #check index
+        derivative=np.dot(deltas[i+1], np.transpose(prediction[i])) #check this
+        derivatives=derivatives+derivative
+    return derivatives
+
+def gradient_check(architecture, predictions, independents, epsilon=0.0001):
+    """
+
+    :param architecture: a list of parameter matrices specifying a neural architecture
+    :param predictions: a list of arrays of prediction values
+    :param independents: an array of (multiclass) independent values
+    :param epsilon: a constant for gradient checking
+    :return: an array of approximations of the gradient
+    """
+    grad_approx=[]
+    for i in range(len(architecture)):
+        temp_architecture=list(architecture)
+        temp2_architecture=list(architecture)
+        temp_architecture[i]+epsilon
+        temp2_architecture[i]-epsilon
+        grad_approx_i=(neural_cost(temp_architecture, predictions, independents, 0.001)-neural_cost(temp_architecture, predictions, independents, 0.001))/(2*epsilon)
+        grad_approx=grad_approx+grad_approx_i #Check here whether it has to be the other way round
+    return grad_approx
+
+
+def train_neural_network(predictors, architecture, independents_array, reg=0, max_iter=100000, life_graph="n", optimization_function=gradient_descent, gradient_checker=1):
+    """
+
+    :param predictors: An array of predictor values
+    :param architecture: a list of parameter matrices specifying a randomly initialized neural architecture
+    :param independents_array: a (multiclass) array of independent values
+    :param reg: an integer: desired regularization constant
+    :param max_iter: an integer: manual cutoff to be passed to gradient descent
+    :param life_graph: "n" for no; "y" for life plotting gradient descent
+    :param optimization_algorithm=The optimization algorithm to be used.
+    :return: a trained neural network
+    """
+    checker=[1]*predictors.shape[1]
+    predictions=[]
+    for i in range(predictors.shape[0]):
+        prediction=forward_propagation(predictors[i], architecture)
+        predictions=predictions+prediction
+        deltas=backward_propagation(prediction, independents_array[i])
+        derivatives=neural_derivatives(prediction, deltas, architecture)
+        if i==0:
+            Delta=derivatives
+        else:
+            Delta=[np.add(x) for x in zip(Delta, derivatives)]
+
+    Reg_Delta=[1/predictors.shape[0]*x for x in Delta]
+    Reg_Delta_0=[x[:0] for x in Reg_Delta]
+    Reg_Delta=[np.delete(x, 0, axis=1) for x in Reg_Delta]
+    Reg_architecture=[reg*x for x in architecture]
+    Reg_Delta=[np.add(x) for x in zip(Reg_Delta, Reg_architecture)]
+    Reg_Delta=[np.concatenate(x, axis=1) for x in zip(Reg_Delta_0, Reg_Delta)]
+
+
+    if gradient_checker==1:
+
+
+    temp_architecture=[]
+    for i in range(len(architecture)):
+        temp_parameters=optimization_function(architecture[i], Reg_Delta[i], checker) #check whether flattening is needed
+        temp_architecture=temp_architecture+temp_parameters
+    architecture=temp_architecture
+
+
+
 def neural_network(predictors, neural_function):
     """
 
@@ -618,17 +765,5 @@ def neural_network(predictors, neural_function):
     """
     return neural_function(predictors)
 
-
-# def normal_equation(predictors, independents):
-#     """
-#
-#     :param predictors: an array of predictors
-#     :param independents: an array of independent values
-#     :return: The optimal parameters solved for using the normal equation
-#     """
-#     transposed_predictors=np.transpose(predictors)
-#     parameters= np.dot(np.linalg.inv(np.dot(transposed_predictors,predictors)),np.dot(transposed_predictors, independents))
-#
-#     return parameters
 
 
