@@ -625,7 +625,7 @@ def neural_cost(parameter_matrices, predictions, independents, reg):
     neural_cost=0
     regularization=0
     #predictions=untrained_neural_network(predictors, parameter_matrices)
-    for i in predictions.shape[0]:
+    for i in range(len(predictions)):
         neural_cost+=logistic_cost(predictions[i], independents, 0)
     if reg!=0:
         for i in len(parameter_matrices):
@@ -638,14 +638,16 @@ def neural_architecture(layers, units, epsilon=0.001):
     """
 
     :param layers: an integer: number of layers.
-    :param units: a list of length "layers", specifying the number of units per layer (without bias unit). Input units should be predictors.shape[1]; output units should be independents_array.shape[1].
+    :param units: a list of length "layers", specifying the number of units per layer (without bias unit). Input units should be predictors.shape[1]-1; output units should be independents_array.shape[1].
     :param epsilon: a parameter for random initialization.
     :return: a randomly initialized list of parameter matrices specifying a neural architecture.
     """
     architecture=[]
     for i in range(layers):
-        layer=(np.random.uniform(0,1,(units[i]+1,units[i+1]))*2*epsilon)-epsilon
-        architecture=architecture+layer
+        layer=(np.random.uniform(0,1,(units[i+1],units[i]+1))*2*epsilon)-epsilon
+        #layer=(np.random.uniform(0,1,(units[i]+1,units[i+1]))*2*epsilon)-epsilon
+        print("layer",layer)
+        architecture=architecture+[layer]
     return architecture
 
 
@@ -656,11 +658,19 @@ def forward_propagation(predictor, architecture):
     :param architecture: a list of parameter matrices specifying a neural architecture
     :return: the neural network's hidden activations and predictions as a list of arrays
     """
-    prediction=[]
+    prediction=[predictor]
+    #print(predictor)
+    #print(architecture)
     for i in range(len(architecture)):
-        predictor=1/(1+np.exp((-1)*(np.dot(predictor, architecture[i]))))
-        predictor=np.c_[np.ones(predictor.shape[0]), predictor]
-        prediction=prediction+predictor
+        #print(np.dot(predictor, architecture[i]))
+        predictor=1/(1+np.exp((-1)*(np.dot(architecture[i], predictor))))
+        #print(predictor)
+        #predictor=np.c_[np.ones(predictor.shape[0]), predictor]
+        if i<len(architecture)-1:
+            predictor=np.insert(predictor, 0, np.array([1]))
+        #print(predictor)
+        prediction=prediction+[predictor]
+        #print(prediction)
     return prediction
 
 def backward_propagation(prediction, architecture, independent):
@@ -671,26 +681,32 @@ def backward_propagation(prediction, architecture, independent):
     :param independent: an array: (Multiclass) Independent value correcponding to predictor value
     :return: The errors of the neural network
     """
+    #print(prediction)
     delta=prediction[-1]-independent
     deltas=[]
-    deltas=deltas+delta
+    deltas=deltas+[delta]
     for i in range(len(architecture)-2): #check the indexing later
         delta=np.dot(np.transpose(architecture[len(architecture)-i]),delta)*prediction[-(i+2)]*(1-prediction[-(i+2)])
-        deltas=delta+deltas
+        deltas=[delta]+deltas
     return deltas
 
 def neural_derivatives(prediction, deltas, architecture):
     """
 
-    :param prediction: n array: Prediction for ONE predictor value
+    :param prediction: an array: Prediction for ONE predictor value
     :param deltas: a list of arrays of errors
     :param architecture: list of parameter matrices specifying a neural architecture
     :return: A list of matrices (arrays) of partial derivatives of errors for each parameter
     """
     derivatives=[]
-    for i in range(len(architecture)): #check index
-        derivative=np.dot(deltas[i+1], np.transpose(prediction[i])) #check this
-        derivatives=derivatives+derivative
+    #print("deltas", deltas)
+    #print("prediction",prediction)
+    for i in range(len(architecture)):
+        print(prediction[i])
+        derivative=np.outer(deltas[i], np.transpose(prediction[i])) #double check this
+        derivatives=derivatives+[derivative]
+        #print(derivative)
+    print("derivatives", derivatives)
     return derivatives
 
 def gradient_check(architecture, predictions, independents, epsilon=0.0001):
@@ -713,7 +729,7 @@ def gradient_check(architecture, predictions, independents, epsilon=0.0001):
     return grad_approx
 
 
-def train_neural_network(predictors, architecture, independents_array, reg=0, max_iter=100000, life_graph="n", optimization_function=gradient_descent, gradient_checker=1):
+def train_neural_network(predictors, architecture, independents_array, reg=0, max_iter=1000, life_graph="n", optimization_function=gradient_descent, gradient_checker=1):
     """
 
     :param predictors: An array of predictor values
@@ -725,34 +741,56 @@ def train_neural_network(predictors, architecture, independents_array, reg=0, ma
     :param optimization_algorithm=The optimization algorithm to be used.
     :return: a trained neural network
     """
-    checker=[1]*predictors.shape[1]
-    predictions=[]
-    for i in range(predictors.shape[0]):
-        prediction=forward_propagation(predictors[i], architecture)
-        predictions=predictions+prediction
-        deltas=backward_propagation(prediction, independents_array[i])
-        derivatives=neural_derivatives(prediction, deltas, architecture)
-        if i==0:
-            Delta=derivatives
-        else:
-            Delta=[np.add(x) for x in zip(Delta, derivatives)]
+    #for i in range(independents_array.shape[1]):
+        #independents=independents_array[:,i]
+    counter = 0
+    checker = [1] * predictors.shape[1]
+    predictions = []
+    while checker != [0] * predictors.shape[1] and counter <= max_iter:
+        for i in range(predictors.shape[0]):
+            prediction = forward_propagation(predictors[i], architecture)
+            predictions = predictions + prediction
+            deltas = backward_propagation(prediction, architecture, independents_array[i])
+            derivatives = neural_derivatives(prediction, deltas, architecture)
+            #print(derivatives)
+            if i == 0:
+                Delta = derivatives
+                #print(Delta)
+            else:
+                Delta = [np.add(x[0], x[1]) for x in zip(Delta, derivatives)]
+        # The following code is to regularize the Deltas
+        #print("Delta", Delta)
+        #print(predictions)
+        Reg_Delta = [1 / predictors.shape[0] * x for x in Delta]
+        #print("Reg DElt", Reg_Delta)
+        Reg_Delta_0 = [x[:,0] for x in Reg_Delta]
+        Reg_Delta = [np.delete(x, 0, axis=1) for x in Reg_Delta]
+        Reg_architecture = [reg * x for x in architecture]
+        #print("Reg architecture", Reg_architecture)
+        Reg_architecture=[np.delete(x, 0, axis=1) for x in Reg_architecture]
+        #print("Reg Delta deleted", Reg_Delta)
+        #print(architecture)
+        #print(Reg_architecture)
+        #print("Reg Delta 0", Reg_Delta_0)
+        Reg_Delta = [np.add(x[0], x[1]) for x in zip(Reg_Delta, Reg_architecture)]
+        #print("Reg Delta prefinished", Reg_Delta)
+        Reg_Delta = [np.c_[x[0], x[1]] for x in zip(Reg_Delta_0, Reg_Delta)]
+        print("Reg Delta finished", Reg_Delta)
+        if gradient_checker == 1:
+            print(gradient_check(architecture, predictions, independents_array))
+            print(Reg_Delta)
 
-    Reg_Delta=[1/predictors.shape[0]*x for x in Delta]
-    Reg_Delta_0=[x[:0] for x in Reg_Delta]
-    Reg_Delta=[np.delete(x, 0, axis=1) for x in Reg_Delta]
-    Reg_architecture=[reg*x for x in architecture]
-    Reg_Delta=[np.add(x) for x in zip(Reg_Delta, Reg_architecture)]
-    Reg_Delta=[np.concatenate(x, axis=1) for x in zip(Reg_Delta_0, Reg_Delta)]
+        temp_architecture = []
+        for i in range(len(architecture)):
+            temp_parameters = optimization_function(architecture[i], Reg_Delta[i],
+                                                    checker)  # check whether flattening is needed
+            temp_architecture = temp_architecture + temp_parameters
+        # convergence_checker(checker, temp_architecture, architecture, epsilon=0.0001)
+        architecture = temp_architecture
+        counter += 1
+    return architecture
 
 
-    if gradient_checker==1:
-
-
-    temp_architecture=[]
-    for i in range(len(architecture)):
-        temp_parameters=optimization_function(architecture[i], Reg_Delta[i], checker) #check whether flattening is needed
-        temp_architecture=temp_architecture+temp_parameters
-    architecture=temp_architecture
 
 
 
