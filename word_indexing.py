@@ -1,37 +1,54 @@
-#indexing "conceptual scheme" by its word-count position
+#Indexing "conceptual scheme" by its word-count position
 import numpy as np
 import string
 
-def word_indexer(data_path):
+#Writes all filenames in list
+import glob
+filenames = glob.glob("/home/sh/Desktop/june_project/data_quine/all_texts/*.txt")
+
+#Orders filenames according to date of mentioned in their name
+import re
+def atoi(text):
+    return int(text) if text.isdigit() else text
+
+def natural_keys(text):
+    '''
+    alist.sort(key=natural_keys) sorts in human order
+    http://nedbatchelder.com/blog/200712/human_sorting.html
+    (See Toothy's implementation in the comments)
+    '''
+    return [ atoi(c) for c in re.split('(\d+)', text) ]
+
+filenames.sort(key=natural_keys)
+
+def word_indexer(filenames):
     '''Takes file of text and returns word-positions where "conceptual scheme" occurs.
-    :param data_path: Path to text file.
+    :param data_path: List of filenames, chronologically ordered.
     :return time_points: Array with positions.'''
-    collective_corpus = []
     word_count = 0  #init word counter
     occurrence_tracker = [] #init empty list to note word count where bigram occurs
     first_part = "nope" #init first element of bigram
-    with open(data_path, 'r') as temp0:
-        for line in temp0:
-            #collective_corpus.append(line.replace('.', " ", 1).replace('?'," ", 1).replace(',', " ", 1).replace(':', " ", 1).replace(';', " ", 1).replace('!', " ", 1).replace("'", " ", 1).split()) #removes points etc
-            collective_corpus.append(line.translate(None, string.punctuation))
-    #upper-case lower-case should not matter!!!
-        for line in collective_corpus:
-            line = line.split(" ")
-            for word in line:
-                word_count += 1
-                #print(word, word_count)
-                if word.lower() == "conceptual":
-                    first_part = "conceptual"
-                else:
-                    pass
-                if ((word.lower() == "scheme") or (word.lower() == "schemata") or (word.lower() == "schemes")) and (first_part.lower() == "conceptual"):
-                    occurrence_tracker.append(word_count)
-                    first_part = word #setting first word of bigram to not-"conceptual" again
-                else:
-                    first_part = word
-                    pass
+    count = 0
+    count2 = 0
+    for fname in filenames:
+        with open(fname) as infile:
+            for line in infile:
+                temp0 = line.translate(None, string.punctuation)
+                temp1 = temp0.split(" ")
+                for word in temp1:
+                    word_count += 1
+                    if word.lower() == "conceptual":
+                        first_part = "conceptual"
+                    else:
+                        pass
+                    if ((word.lower() == "scheme") or (word.lower() == "schemata") or (word.lower() == "schemes")) and (first_part == "conceptual"):
+                        occurrence_tracker.append(word_count)
+                        first_part =word #setting first word of bigram to not-"conceptual" again
+                    else:
+                        first_part = word
 
     time_points = np.array(occurrence_tracker)[np.newaxis].T
-    return time_points
+    return time_points, len(time_points)
 
-# print(word_indexer("toy_corpus.txt"))
+#word_indexer(filenames)
+print(word_indexer(filenames))

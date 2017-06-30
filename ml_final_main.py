@@ -3,16 +3,31 @@ import string
 from word_indexing import word_indexer
 from k_means import k_means
 
-data_path = "//home//sh//Desktop//june_project//data_quine//all_texts//1953e_On Mental Entities_Quine (1).txt"
+#Corpus to statistic
+data_path = "/home/sh/Desktop/june_project/data_quine/all_texts/toy_text.txt"
 data_points = word_indexer(data_path)
-print(data_points)
 
-test1 = k_means(3, data_points)
-initialize = test1.cluster_centroid_initialization(2)
-print(initialize)
-clustering_step = test1.clustering(2, initialize)
-print(clustering_step)
-runit = test1.find_clusters(2)
-print(runit)
-cost = test1.distorsion_function(2, runit)
-print(cost)
+#Statistic to K-means object
+m = len(data_points)
+#K = 4
+test1 = k_means(m, data_points)
+#run = test1.robust_centroids(K)
+
+
+
+#Plot K - Cost
+import matplotlib.pyplot as plt
+
+init_K = []
+init_cost = []
+for i in range(1,11):
+    init_K.append(i)
+    init_cost.append(test1.robust_centroids(i))
+    print(init_K, init_cost)
+
+plt.plot(init_K, init_cost, 'ro')
+plt.axis([0, 10, 0, 200])
+plt.xlabel('K')
+plt.ylabel('Mean Squared Error')
+plt.title('Plot: Number of Clusters vs. Distorsion')
+plt.show()
