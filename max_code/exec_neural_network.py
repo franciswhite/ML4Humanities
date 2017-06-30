@@ -13,4 +13,4 @@ architecture=mv.neural_architecture(1, [predictors.shape[1]-1,independents.shape
 
 result=mv.train_neural_network(predictors, architecture, independents, 0.001)
 print(result)
-print(mv.forward_propagation(np.array[1,1], result))
+print(mv.forward_propagation(np.array([1,1,1]), result))

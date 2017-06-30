@@ -627,14 +627,17 @@ def neural_cost(parameter_matrices, predictions, independents, reg):
     neural_cost=0
     regularization=0
     #predictions=untrained_neural_network(predictors, parameter_matrices)
-    #print("Predictions", predictions)
+    print("Predictionsarray", predictions)
     for i in range(predictions.shape[0]):
-        neural_cost+=logistic_cost(np.array([x for x in predictions[:,-1]]), independents, 0) #The extra list comprehenseion is actually necessary to avoid a very weird and stupid bug. Arrays behaving stupidly...
+        print("Predictions", [x for x in predictions[:,-1][i]])
+        print("Indepentents", independents[i])
+        neural_cost+=logistic_cost(np.array([x for x in predictions[:,-1][i]]), independents[i], 0) #The extra list comprehenseion is actually necessary to avoid a very weird and stupid bug. Arrays behaving stupidly...
     if reg!=0:
         for i in range(len(parameter_matrices)):
             #reg_parameter_matrix=np.c_(parameter_matrices[i])
             regularization+= np.sum(reg/(2*independents.shape[0])*np.square(parameter_matrices[i][1:]))
     neural_cost=neural_cost+regularization
+    print("cost",neural_cost)
     return neural_cost
 
 def neural_architecture(layers, units, epsilon=0.001):
@@ -663,8 +666,8 @@ def forward_propagation(predictor, architecture):
     """
     #print("predictor", predictor)
     prediction=[[x for x in predictor]]
-    #print("start", prediction)
-    #print(architecture)
+    print("start", prediction)
+    #print("archinput",architecture)
     for i in range(len(architecture)):
         #print(np.dot(predictor, architecture[i]))
         predictor=1/(1+np.exp((-1)*(np.dot(architecture[i], predictor))))
@@ -676,7 +679,7 @@ def forward_propagation(predictor, architecture):
         prediction=prediction+[[x for x in predictor]]
     #print("prediction0", prediction)
     #prediction=np.array(prediction)
-    #print("prediction1", prediction)
+    print("prediction1", prediction)
     return prediction
 
 def backward_propagation(prediction, architecture, independent):
@@ -715,36 +718,91 @@ def neural_derivatives(prediction, deltas, architecture):
     #print("derivatives", derivatives)
     return derivatives
 
-def gradient_check(architecture, predictions, independents, epsilon=0.0001):
+def unroll(list_of_arrays):
+    """
+
+    :param list_of_arrays: a list of arrays such as a neural architecture
+    :return: unrolled (or flattened) version of the list
+    """
+    unrolled_list=np.array([])
+    for i in range(len(list_of_arrays)):
+        unrolled_array=list_of_arrays[i].ravel()
+        #print("unrolled_array", unrolled_array)
+       #print("init unrolled lsit", unrolled_list)
+        unrolled_list=np.concatenate((unrolled_list, unrolled_array))
+    #print("unrolled_list", unrolled_list)
+    return unrolled_list
+
+def rollin (unrolled_array, original_list_of_arrays):
+    """
+
+    :param unrolled_array: a unrolled(flattened) list of arrays
+    :param original_list_of_arrays: the former unflattened list
+    :return: a list of arrays
+    """
+    rolledin_list=[]
+    for i in range(len(original_list_of_arrays)):
+        if i==0:
+            rolled_in_array=np.reshape(unrolled_array[:original_list_of_arrays[i].size],original_list_of_arrays[i].shape)
+            rolledin_list=rolledin_list+[rolled_in_array]
+        else:
+            rolled_in_array=np.reshape(unrolled_array[original_list_of_arrays[i-1].size:original_list_of_arrays[i-1].size+original_list_of_arrays[i].size],original_list_of_arrays[i].shape)
+            rolledin_list=rolledin_list+[rolled_in_array]
+    #print("rolled in list", rolledin_list)
+    return rolledin_list
+
+
+
+
+def gradient_check(architecture, predictions, independents, reg, epsilon=0.0001):
     """
 
     :param architecture: a list of parameter matrices specifying a neural architecture
     :param predictions: a list of arrays of prediction values
     :param independents: an array of (multiclass) independent values
+    :param reg: a regularization constant to be passed to the cost function
     :param epsilon: a constant for gradient checking
     :return: an array of approximations of the gradient
     """
     grad_approx=[]
-    for i in range(len(architecture)):
-        #print(len(architecture))
-        temp_architecture=copy.deepcopy(architecture)
-        #print("temp_arch",temp_architecture)
+
+
+
+    unrolled_architecture=unroll(architecture)
+    for i in range(unrolled_architecture.size):
+        temp_architecture=[x for x in unrolled_architecture]
         temp2_architecture=copy.deepcopy(temp_architecture)
-        #print("temp_arch2",temp_architecture)
         temp_architecture[i]+=epsilon
-        #print("temp_arch2",temp_architecture)
         temp2_architecture[i]-=epsilon
-        #print("temp_arch",temp_architecture)
-        #print("temp_arch2",temp2_architecture)
-        #print("cost1", neural_cost(temp_architecture, predictions, independents, 0.001))
-        #print("cost2", neural_cost(temp2_architecture, predictions, independents, 0.001))
-        grad_approx_i=(neural_cost(temp_architecture, predictions, independents, 0.1)-neural_cost(temp2_architecture, predictions, independents, 0.1))/(2*epsilon)
-        #print("grad_approx_i",grad_approx_i)
-        grad_approx=grad_approx+[grad_approx_i] #Check here whether it has to be the other way round
+        temp_architecture=rollin(temp_architecture, architecture)
+        temp2_architecture=rollin(temp2_architecture, architecture)
+        #print("archtiectures", temp_architecture, temp2_architecture)
+        grad_approx_i=(neural_cost(temp_architecture, predictions, independents, reg)-neural_cost(temp2_architecture, predictions, independents, reg))/(2*epsilon)
+        grad_approx=grad_approx+[grad_approx_i]
+    #print("grad_approx", grad_approx)
     return grad_approx
 
 
-def train_neural_network(predictors, architecture, independents_array, reg=0, max_iter=1000, life_graph="n", optimization_function=gradient_descent, gradient_checker=1):
+    # for i in range(len(architecture)):
+    #     for j in architecture[i]:
+    #         temp_architecture=copy.deepcopy(architecture)
+    #         temp2_architecture=copy.deepcopy(temp_architecture)
+    #         print(j)
+    #         temp_parameters1=j+epsilon
+    #         temp_parameters2=j-epsilon
+    #         print(j)
+    #         temp_architecture[i][j]+=epsilon
+    #         temp2_architecture[i][j]-=epsilon
+    #         #unrolled=unroll([np.array([[1,2],[3,4]]), np.array([5,6])])
+    #         #rollin(unrolled, [np.array([[1,2],[3,4]]), np.array([5,6])])
+    #         grad_approx_i=(neural_cost(temp_architecture, predictions, independents, 0.1)-neural_cost(temp2_architecture, predictions, independents, 0.1))/(2*epsilon)
+    #         print("grad_approx_i",grad_approx_i)
+    #         grad_approx=grad_approx+[grad_approx_i] #Check here whether it has to be the other way round
+    # print("grad_approx", grad_approx)
+    # return grad_approx
+
+
+def train_neural_network(predictors, architecture, independents_array, reg=0.0001, max_iter=2000, life_graph="n", optimization_function=gradient_descent, gradient_checker=1):
     """
 
     :param predictors: An array of predictor values
@@ -760,8 +818,8 @@ def train_neural_network(predictors, architecture, independents_array, reg=0, ma
         #independents=independents_array[:,i]
     counter = 0
     checker = [1] * predictors.shape[1]
-    predictions = []
     while checker != [0] * predictors.shape[1] and counter <= max_iter:
+        predictions = []
         for i in range(predictors.shape[0]):
             prediction = forward_propagation(predictors[i], architecture)
             #print("prediction", prediction)
@@ -794,15 +852,18 @@ def train_neural_network(predictors, architecture, independents_array, reg=0, ma
         #print("Reg Delta finished", Reg_Delta)
         predictions=np.array(predictions)
         if gradient_checker == 1:
-            print("gradient_check", gradient_check(architecture, predictions, independents_array))
-            print("Reg_Delta", Reg_Delta)
-
-        temp_architecture = []
-        for i in range(len(architecture)):
-            temp_parameters = optimization_function(architecture[i], Reg_Delta[i], checker)  # check whether flattening is needed
-            temp_architecture = temp_architecture + temp_parameters
+            print("gradient_check", gradient_check(architecture, predictions, independents_array, reg))
+            print("Reg_Delta", unroll(Reg_Delta))
+        print("prearchitecture", architecture)
+        temp_architecture= unroll(architecture)
+        temp_Reg_Delta= unroll(Reg_Delta)
+        #for i in range(architecture.size):
+        temp_parameters = optimization_function(temp_architecture, temp_Reg_Delta, checker)  # check whether flattening is needed
+        temp_architecture = temp_parameters
+        temp_architecture=rollin(temp_architecture, architecture)
         # convergence_checker(checker, temp_architecture, architecture, epsilon=0.0001)
         architecture = temp_architecture
+        print("architecture", architecture)
         counter += 1
     return architecture
 
