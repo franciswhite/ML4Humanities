@@ -11,6 +11,14 @@ architecture=mv.neural_architecture(1, [predictors.shape[1]-1,independents.shape
 #print(independents)
 #print(architecture)
 
-result=mv.train_neural_network(predictors, architecture, independents, 0.001)
-print(result)
-print(mv.forward_propagation(np.array([1,1,1]), result))
+result=mv.train_neural_network(predictors, architecture, independents)
+#print("NN_result",result)
+#print("NNprediction",mv.forward_propagation(np.array([1,1,1]), result))
+#print(independents)
+
+multiresult=mv.multiclass_logistic_regression(predictors,independents)
+print("Multiresult", multiresult)
+print("Multipredictions",mv.multiclass_predictions(predictors, multiresult))
+#print("multipredict 2", mv.multiclass_predict(np.array([1,1,1]), multiresult))
+print("NN_result",result)
+print("NNprediction",mv.forward_propagation(np.array([1,1,1]), result))

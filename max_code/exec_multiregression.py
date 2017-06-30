@@ -59,10 +59,10 @@ print(mv.logistic_cost2(np.array( [ 0.12378762,  1.50871727]), logistic_predicto
 
 
 #The following code runs multiclass logistic regression using gradient descent
-#multiresult=mv.multiclass_logistic_regression(multiclass_predictors,multiclass_independents)
-#print(multiresult)
-#print(mv.multiclass_predictions(multiclass_predictors, multiresult))
-#print(mv.multiclass_predict(2, multiresult))
+multiresult=mv.multiclass_logistic_regression(multiclass_predictors,multiclass_independents)
+print("Multiresult", multiresult)
+print("Multipredictions",mv.multiclass_predictions(multiclass_predictors, multiresult))
+print("multipredict 2", mv.multiclass_predict(2, multiresult))
 
 
 #The following code executes various logic gates implemented as neural networks on toy data if uncommented.
