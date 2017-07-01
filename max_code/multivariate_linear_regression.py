@@ -628,10 +628,17 @@ def neural_cost(architecture, predictions, independents, reg):
     regularization=0
     #predictions=untrained_neural_network(predictors, parameter_matrices)
     #print("Predictionsarray", predictions)
-    for i in range(predictions.shape[0]):
-        #print("Predictions", [x for x in predictions[:,-1][i]])
+    for i in range(independents.shape[1]):
+        #print("i",i)
+        #print("predictions.shape[0]", predictions.shape[1])
+        #print("Predictions[:,-1][i] before array", predictions[:,-1][:,i])
+        #print("Predictions[:,-1][i]", np.array([x for x in predictions[:,-1][i]]))
+        temp_predictions=np.array([np.array(x) for x in predictions[:,-1]])
+        #print("temp_rpredictions", temp_predictions)
+        #print("Predictions[:,-1][i] before array", temp_predictions[:,i])
         #print("Indepentents", independents[i])
-        neural_cost+=logistic_cost(np.array([x for x in predictions[:,-1][i]]), independents[i], 0) #The extra list comprehenseion is actually necessary to avoid a very weird and stupid bug. Arrays behaving stupidly...
+        neural_cost+=logistic_cost(temp_predictions[:,i], independents[:,i], 0) #The extra list comprehenseion is actually necessary to avoid a very weird and stupid bug. Arrays behaving stupidly...
+        #print("neural cost", neural_cost)
     if reg!=0:
         for i in range(len(architecture)):
             #reg_parameter_matrix=np.c_(parameter_matrices[i])
@@ -693,8 +700,13 @@ def backward_propagation(prediction, architecture, independent):
     delta=prediction[-1]-independent
     deltas=[]
     deltas=deltas+[delta]
-    for i in range(len(architecture)-2): #check the indexing later
-        delta=np.dot(np.transpose(architecture[len(architecture)-i]),delta)*prediction[-(i+2)]*(1-prediction[-(i+2)])
+    for i in range(len(architecture)-1): #check the indexing later
+        #print("i",i)
+        #print("architecture[len(architecture)-i]", architecture[len(architecture)-i-1].shape)
+        #print("prediction[-(i+2)]", prediction[-(i+2)])
+        #print("(1-prediction[-(i+2)]", 1-np.array(prediction[-(i+2)]))
+        delta=np.dot(np.transpose(architecture[len(architecture)-i-1]),delta)*np.array(prediction[-(i+2)])*(1-np.array(prediction[-(i+2)]))
+        #print("delta", delta)
         deltas=[delta]+deltas
     return deltas
 
@@ -710,7 +722,8 @@ def neural_derivatives(prediction, deltas, architecture):
     #print("deltas", deltas)
     #print("prediction",prediction)
     for i in range(len(architecture)):
-        #print("deltas[i]", deltas)
+        #print("i",i)
+        #print("deltas[i]", deltas[i])
         #print("prediction[i]", prediction[i])
         derivative=np.outer(deltas[i], np.transpose(prediction[i])) #double check this
         derivatives=derivatives+[derivative]
@@ -790,7 +803,6 @@ def gradient_check(architecture, predictors, independents, reg, epsilon=0.0001):
             #print("prediction", prediction)
             predictions2 = predictions2 + [prediction]
         predictions2=np.array(predictions2)
-
         grad_approx_i=(neural_cost(temp_architecture, predictions1, independents, reg)-neural_cost(temp2_architecture, predictions2, independents, reg))/(2*epsilon)
         grad_approx=grad_approx+[grad_approx_i]
     #print("grad_approx", grad_approx)
@@ -817,7 +829,7 @@ def gradient_check(architecture, predictors, independents, reg, epsilon=0.0001):
     # return grad_approx
 
 
-def train_neural_network(predictors, architecture, independents_array, reg=0, max_iter=20000, life_graph="n", optimization_function=gradient_descent, gradient_checker=0):
+def train_neural_network(predictors, architecture, independents_array, reg=0, max_iter=100000, life_graph="n", optimization_function=gradient_descent, gradient_checker=0):
     """
 
     :param predictors: An array of predictor values
@@ -836,12 +848,14 @@ def train_neural_network(predictors, architecture, independents_array, reg=0, ma
     while checker != [0] * predictors.shape[1] and counter <= max_iter:
         predictions = []
         for i in range(predictors.shape[0]):
+            #print("predictor[i]", predictors[i])
             prediction = forward_propagation(predictors[i], architecture)
             #print("prediction", prediction)
             predictions = predictions + [prediction]
             deltas = backward_propagation(prediction, architecture, independents_array[i])
+            #print("deltas", deltas)
             derivatives = neural_derivatives(prediction, deltas, architecture)
-            #print(derivatives)
+            #print("derivatives", derivatives)
             if i == 0:
                 Delta = derivatives
                 #print(Delta)
@@ -849,10 +863,16 @@ def train_neural_network(predictors, architecture, independents_array, reg=0, ma
                 Delta = [np.add(x[0], x[1]) for x in zip(Delta, derivatives)]
         # The following code is to regularize the Deltas
         #print("Delta", Delta)
+        #print("Architecture before reg", architecture)
         #print(predictions)
         Reg_Delta = [np.multiply(1 / predictors.shape[0], x) for x in Delta]
         #print("Reg DElt", Reg_Delta)
-        Reg_Delta_0 = [x[:,0] for x in Reg_Delta]
+        #Reg_Delta_0 = [x[0] for x in Reg_Delta[:-1]]
+        #Reg_Delta_0=[x[:,0] for x in Reg_Delta]
+        #print("Reg_Delta_0", Reg_Delta_0)
+        Reg_Delta = [np.delete(x, 0, axis=0) for x in Reg_Delta[:-1]]+[Reg_Delta[-1]]
+        Reg_Delta_0=[x[:,0] for x in Reg_Delta]
+        #print("Reg_Delta_0", Reg_Delta_0)
         Reg_Delta = [np.delete(x, 0, axis=1) for x in Reg_Delta]
         #print("Architecture before reg", architecture)
         Reg_architecture = [np.multiply((reg / predictors.shape[0]), x) for x in architecture]
@@ -860,7 +880,7 @@ def train_neural_network(predictors, architecture, independents_array, reg=0, ma
         Reg_architecture=[np.delete(x, 0, axis=1) for x in Reg_architecture]
         #print("Reg Delta deleted", Reg_Delta)
         #print(architecture)
-        #print(Reg_architecture)
+        #print("Reg architecture", Reg_architecture)
         #print("Reg Delta 0", Reg_Delta_0)
         #print("Reg Delta before addition", Reg_Delta)
         Reg_Delta = [np.add(x[0], x[1]) for x in zip(Reg_Delta, Reg_architecture)]
@@ -882,7 +902,7 @@ def train_neural_network(predictors, architecture, independents_array, reg=0, ma
         counter += 1
         print(counter)
     print("predictions", predictions)
-    return architecture, predictions
+    return architecture
 
 
 
