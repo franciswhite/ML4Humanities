@@ -713,7 +713,7 @@ def backward_propagation(prediction, architecture, independent):
             #print("prediction", prediction[-(i+2)][1:].shape)
             #print("prediction shape", np.array(np.array(prediction[-(i+2)][1:])*(1-np.array(prediction[-(i+2)][1:]))).shape)
             delta=np.dot(np.transpose(architecture[len(architecture)-i-1]),delta[1:])*np.array(prediction[-(i+2)])*(1-np.array(prediction[-(i+2)]))
-        #print("delta", delta)
+        print("deltashape", delta.shape)
         deltas=[delta]+deltas
     return deltas
 
@@ -766,7 +766,11 @@ def rollin (unrolled_array, original_list_of_arrays):
             rolled_in_array=np.reshape(unrolled_array[:original_list_of_arrays[i].size],original_list_of_arrays[i].shape)
             rolledin_list=rolledin_list+[rolled_in_array]
         else:
-            rolled_in_array=np.reshape(unrolled_array[original_list_of_arrays[i-1].size:original_list_of_arrays[i-1].size+original_list_of_arrays[i].size],original_list_of_arrays[i].shape)
+            preceding_array_size=0
+            for j in range(i):
+                preceding_array_size+=rolledin_list[j].size
+
+            rolled_in_array=np.reshape(unrolled_array[preceding_array_size:preceding_array_size+original_list_of_arrays[i].size],original_list_of_arrays[i].shape)
             rolledin_list=rolledin_list+[rolled_in_array]
     #print("rolled in list", rolledin_list)
     return rolledin_list
@@ -794,9 +798,10 @@ def gradient_check(architecture, predictors, independents, reg, epsilon=0.0001):
         temp2_architecture=copy.deepcopy(temp_architecture)
         temp_architecture[i]+=epsilon
         temp2_architecture[i]-=epsilon
+        print("unrolled architectures", unrolled_architecture,"\n", temp_architecture,"\n", temp2_architecture)
         temp_architecture=rollin(temp_architecture, architecture)
         temp2_architecture=rollin(temp2_architecture, architecture)
-        #print("archtiectures", temp_architecture, temp2_architecture)
+        print("archtiectures", architecture,"\n", temp_architecture,"\n", temp2_architecture)
 
         predictions1 = []
         for i in range(predictors.shape[0]):
@@ -836,7 +841,7 @@ def gradient_check(architecture, predictors, independents, reg, epsilon=0.0001):
     # return grad_approx
 
 
-def train_neural_network(predictors, architecture, independents_array, reg=0.001, max_iter=10000, life_graph="y", optimization_function=gradient_descent, gradient_checker=0):
+def train_neural_network(predictors, architecture, independents_array, reg=0.001, max_iter=10000, life_graph="y", optimization_function=gradient_descent, gradient_checker=1):
     """
 
     :param predictors: An array of predictor values
