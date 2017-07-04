@@ -3,7 +3,6 @@ import codecs
 import itertools
 import numpy as np
 from ML4Humanities.max_code import multivariate_linear_regression as mv
-import pickle
 
 def get_contexts(path="c:\\users\\maxgr\\Downloads\\Machine Learning for the Humanities\\Bolzano_Dataset"):
     """
@@ -60,14 +59,15 @@ arithmetic_list=[]
 geometric_list=[]
 euclid_list=[]
 cantor_list=[]
-arithmetic_contexts=[ "ziffer", "arithmet", "zahl", "unbenannt", "zählbar", "konkret", "vielheit", "buchstabe", "reihe"]
-geometric_contexts=["geomet", "gerade", "linie", "ebene", "körper", "raum", "entfernung", "entfernt", "punkt"]
-euclidian_context=["teil","theil", "in sich faßt", "euklid", "ganz"]
-cantorian_contexts=["paar", "zählbar", "weite", "bestimmungsgründe", "enstehungsweise", "gleich", "verbindung", "regel"]
-arith_combs=set(itertools.combinations(arithmetic_contexts, 3))
-geo_combs=set(itertools.combinations(geometric_contexts, 3))
-eucl_combs=set(itertools.combinations(euclidian_context, 3))
-cantor_combs=set(itertools.combinations(cantorian_contexts, 3))
+#arithmetic_contexts=[ "ziffer", "arithmet", "zahl", "unbenannt", "zählbar", "konkret", "vielheit", "buchstabe", "reihe"]
+arithmetic_contexts=[ "ziffer", "arithmet", "zahl", "unbenannt", "konkret", "vielheit", "reihe", "begriff","zeichen", "gegenst"]
+geometric_contexts=["geomet", "gerade", "linie", "ebene", "körper", "raum", "entfernung", "entfernt", "punkt", "figur"]
+euclidian_context=["teil","theil", "in sich faßt", "euklid", "ganz", "in sich schließ", "größer", "kleiner"]
+cantorian_contexts=["paar", "zählbar", "weite", "bestimmungsgründe", "enstehungsweise", "gleich", "verbindung", "regel", "verglich"]
+arith_combs=set(itertools.combinations(arithmetic_contexts, 4))
+geo_combs=set(itertools.combinations(geometric_contexts, 4))
+eucl_combs=set(itertools.combinations(euclidian_context, 4))
+cantor_combs=set(itertools.combinations(cantorian_contexts, 4))
 
 
 datalist=[x for x in datalist if "unendlich" in x]
@@ -76,7 +76,7 @@ print(len(datalist))
 
 for i in range(len(datalist)):
     for x in arith_combs:
-        if len([y for y in x if y in datalist[i]])==3 and datalist[i] not in arithmetic_list:
+        if len([y for y in x if y in datalist[i]])==4 and datalist[i] not in arithmetic_list:
             arithmetic_list=arithmetic_list+[datalist[i]]
             countera+=1
             print("countera",countera)
@@ -85,19 +85,19 @@ for i in range(len(datalist)):
             #countera+=1
 for i in range(len(datalist)):
     for x in geo_combs:
-        if len([y for y in x if y in datalist[i]])==3 and datalist[i] not in geometric_list:
+        if len([y for y in x if y in datalist[i]])==4 and datalist[i] not in geometric_list:
             geometric_list=geometric_list+[datalist[i]]
             counterg+=1
             print("counterg", counterg)
 for i in range(len(datalist)):
     for x in eucl_combs:
-        if len([y for y in x if y in datalist[i]])==3 and datalist[i] not in euclid_list:
+        if len([y for y in x if y in datalist[i]])==4 and datalist[i] not in euclid_list:
             euclid_list=euclid_list+[datalist[i]]
             countere+=1
             print("countere", countere)
 for i in range(len(datalist)):
     for x in cantor_combs:
-        if len([y for y in x if y in datalist[i]])==3 and datalist[i] not in cantor_list:
+        if len([y for y in x if y in datalist[i]])==4 and datalist[i] not in cantor_list:
             cantor_list=cantor_list+[datalist[i]]
             counterc+=1
             print("counterc", counterc)
@@ -129,7 +129,7 @@ def prepare_data(datalist, features, independent_feature):
             #if features[j] in datalist[i]:
             feature[j]=datalist[i].count(features[j])
         print("checklist",[x for x in independent_feature if x in datalist[i]])
-        if len([x for x in independent_feature if x in datalist[i]])>=3:
+        if len([x for x in independent_feature if x in datalist[i]])>=4:
             feature[len(features)]=1
         else:
             feature[len(features)]=0
@@ -138,7 +138,7 @@ def prepare_data(datalist, features, independent_feature):
     return feature_list
 
 result=prepare_data(datalist, arithmetic_contexts+geometric_contexts, cantorian_contexts)
-#result=np.array(result)
+result=np.array(result)
 #print("array", result)
 #print(prepare_data(datalist, arithmetic_contexts+geometric_contexts, cantorian_contexts))
 
@@ -146,11 +146,15 @@ predictors=mv.get_predictors(result)
 independents=mv.get_independents(result)
 independents=mv.multiclass_independents(independents)
 
-architecture=mv.neural_architecture(2, [predictors.shape[1]-1,30, independents.shape[1]])
+architecture=mv.neural_architecture(3, [predictors.shape[1]-1,40,40, independents.shape[1]])
 
 trained=mv.train_neural_network(predictors, architecture, independents)
 #with open("parameters", "w") as parameters:
-np.save("parameters", trained)
+np.save("parameters3", trained)
 
-predict=mv.forward_propagation(np.array(predictors[300]), np.load("parameters.npy"))
-print("predict", predict)
+#predict1=mv.forward_propagation(np.array(predictors[300]), np.load("parameters.npy"))
+predict2=mv.forward_propagation(np.array(predictors[0]), np.load("parameters3.npy"))
+#print("indepentent", independents[0])
+#print("predict1", predict1)
+#print("predict2", predict2[0], predict2[-1])
+#print(np.load("parameters2.npy"))

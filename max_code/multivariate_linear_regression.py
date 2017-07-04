@@ -313,7 +313,7 @@ def logistic_cost_derivative(predictors, predictions, independents, checker):
     cost_derivatives=np.array(temp_cost_derivatives)
     return cost_derivatives
 
-def gradient_descent(parameters, cost_derivatives, checker, alpha=0.01, reg=0, number_of_values=0):
+def gradient_descent(parameters, cost_derivatives, checker, alpha=100, reg=0, number_of_values=0):
     """
 
     :param parameters: An array containing parameter values
@@ -705,7 +705,14 @@ def backward_propagation(prediction, architecture, independent):
         #print("architecture[len(architecture)-i]", architecture[len(architecture)-i-1].shape)
         #print("prediction[-(i+2)]", prediction[-(i+2)])
         #print("(1-prediction[-(i+2)]", 1-np.array(prediction[-(i+2)]))
-        delta=np.dot(np.transpose(architecture[len(architecture)-i-1]),delta)*np.array(prediction[-(i+2)])*(1-np.array(prediction[-(i+2)]))
+        #print("architecture shape", architecture[len(architecture)-i-1].shape)
+        #print("prediction", prediction[-(i+2)])
+        if i==0:
+            delta=np.dot(np.transpose(architecture[len(architecture)-i-1]),delta)*np.array(prediction[-(i+2)])*(1-np.array(prediction[-(i+2)]))
+        else:
+            #print("prediction", prediction[-(i+2)][1:].shape)
+            #print("prediction shape", np.array(np.array(prediction[-(i+2)][1:])*(1-np.array(prediction[-(i+2)][1:]))).shape)
+            delta=np.dot(np.transpose(architecture[len(architecture)-i-1]),delta[1:])*np.array(prediction[-(i+2)])*(1-np.array(prediction[-(i+2)]))
         #print("delta", delta)
         deltas=[delta]+deltas
     return deltas
@@ -829,7 +836,7 @@ def gradient_check(architecture, predictors, independents, reg, epsilon=0.0001):
     # return grad_approx
 
 
-def train_neural_network(predictors, architecture, independents_array, reg=0, max_iter=100000, life_graph="n", optimization_function=gradient_descent, gradient_checker=0):
+def train_neural_network(predictors, architecture, independents_array, reg=0.001, max_iter=10000, life_graph="y", optimization_function=gradient_descent, gradient_checker=0):
     """
 
     :param predictors: An array of predictor values
@@ -843,6 +850,14 @@ def train_neural_network(predictors, architecture, independents_array, reg=0, ma
     """
     #for i in range(independents_array.shape[1]):
         #independents=independents_array[:,i]
+    if life_graph=="y":
+        fig = matp.figure()
+        ax = fig.add_subplot(111)
+        x = np.arange(10000)
+        y = np.zeros(10000)
+        li, = ax.plot(x, y)
+        fig.canvas.draw()
+        matp.show(block=False)
     counter = 0
     checker = [1] * predictors.shape[1]
     while checker != [0] * predictors.shape[1] and counter <= max_iter:
@@ -900,7 +915,10 @@ def train_neural_network(predictors, architecture, independents_array, reg=0, ma
         # convergence_checker(checker, temp_architecture, architecture, epsilon=0.0001)
         architecture = temp_architecture
         counter += 1
+        if life_graph=="y":
+            plot_cost(neural_cost(architecture, predictions, independents_array, reg), y, li, ax, fig)
         print(counter)
+        print(predictions)
     print("predictions", predictions)
     return architecture
 
