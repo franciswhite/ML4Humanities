@@ -313,7 +313,7 @@ def logistic_cost_derivative(predictors, predictions, independents, checker):
     cost_derivatives=np.array(temp_cost_derivatives)
     return cost_derivatives
 
-def gradient_descent(parameters, cost_derivatives, checker, alpha=100, reg=0, number_of_values=0):
+def gradient_descent(parameters, cost_derivatives, checker, alpha=1, reg=0, number_of_values=0):
     """
 
     :param parameters: An array containing parameter values
@@ -713,7 +713,7 @@ def backward_propagation(prediction, architecture, independent):
             #print("prediction", prediction[-(i+2)][1:].shape)
             #print("prediction shape", np.array(np.array(prediction[-(i+2)][1:])*(1-np.array(prediction[-(i+2)][1:]))).shape)
             delta=np.dot(np.transpose(architecture[len(architecture)-i-1]),delta[1:])*np.array(prediction[-(i+2)])*(1-np.array(prediction[-(i+2)]))
-        print("deltashape", delta.shape)
+        #print("deltashape", delta.shape)
         deltas=[delta]+deltas
     return deltas
 
@@ -798,10 +798,10 @@ def gradient_check(architecture, predictors, independents, reg, epsilon=0.0001):
         temp2_architecture=copy.deepcopy(temp_architecture)
         temp_architecture[i]+=epsilon
         temp2_architecture[i]-=epsilon
-        print("unrolled architectures", unrolled_architecture,"\n", temp_architecture,"\n", temp2_architecture)
+        #print("unrolled architectures", unrolled_architecture,"\n", temp_architecture,"\n", temp2_architecture)
         temp_architecture=rollin(temp_architecture, architecture)
         temp2_architecture=rollin(temp2_architecture, architecture)
-        print("archtiectures", architecture,"\n", temp_architecture,"\n", temp2_architecture)
+        #print("archtiectures", architecture,"\n", temp_architecture,"\n", temp2_architecture)
 
         predictions1 = []
         for i in range(predictors.shape[0]):
@@ -841,7 +841,7 @@ def gradient_check(architecture, predictors, independents, reg, epsilon=0.0001):
     # return grad_approx
 
 
-def train_neural_network(predictors, architecture, independents_array, reg=0.001, max_iter=10000, life_graph="y", optimization_function=gradient_descent, gradient_checker=1):
+def train_neural_network(predictors, architecture, independents_array, reg=0, max_iter=500, life_graph="y", optimization_function=gradient_descent, gradient_checker=0):
     """
 
     :param predictors: An array of predictor values
@@ -864,7 +864,7 @@ def train_neural_network(predictors, architecture, independents_array, reg=0.001
         fig.canvas.draw()
         matp.show(block=False)
     counter = 0
-    checker = [1] * predictors.shape[1]
+    checker = [1] * len(unroll(architecture))
     while checker != [0] * predictors.shape[1] and counter <= max_iter:
         predictions = []
         for i in range(predictors.shape[0]):
@@ -923,7 +923,7 @@ def train_neural_network(predictors, architecture, independents_array, reg=0.001
         if life_graph=="y":
             plot_cost(neural_cost(architecture, predictions, independents_array, reg), y, li, ax, fig)
         print(counter)
-        print(predictions)
+        #print(predictions)
     print("predictions", predictions)
     return architecture
 

@@ -143,18 +143,25 @@ result=np.array(result)
 #print(prepare_data(datalist, arithmetic_contexts+geometric_contexts, cantorian_contexts))
 
 predictors=mv.get_predictors(result)
+predictors=mv.scale(predictors)
 independents=mv.get_independents(result)
 independents=mv.multiclass_independents(independents)
 
-architecture=mv.neural_architecture(3, [predictors.shape[1]-1,40,40, independents.shape[1]])
+architecture=mv.neural_architecture(1, [predictors.shape[1]-1, independents.shape[1]])
 
 trained=mv.train_neural_network(predictors, architecture, independents)
 #with open("parameters", "w") as parameters:
 np.save("parameters3", trained)
 
-#predict1=mv.forward_propagation(np.array(predictors[300]), np.load("parameters.npy"))
+predict1=mv.forward_propagation(np.array(predictors[-1]), np.load("parameters3.npy"))
 predict2=mv.forward_propagation(np.array(predictors[0]), np.load("parameters3.npy"))
 #print("indepentent", independents[0])
-#print("predict1", predict1)
-#print("predict2", predict2[0], predict2[-1])
+print("predict1", predict1[-1])
+print("predict2", predict2[-1])
+print(independents)
+#print(np.load("parameters3.npy"))
 #print(np.load("parameters2.npy"))
+
+for i in range(predictors.shape[0]):
+    predict1=mv.forward_propagation(np.array(predictors[i]), np.load("parameters3.npy"))
+    print(predict1[-1])
