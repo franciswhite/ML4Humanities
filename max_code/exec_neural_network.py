@@ -7,7 +7,7 @@ independents=mv.get_independents(data)
 independents=mv.multiclass_independents(independents)
 
 #print(predictors.shape[0])
-architecture=mv.neural_architecture(2, [predictors.shape[1]-1,3, independents.shape[1]])
+architecture=mv.neural_architecture(2, [predictors.shape[1]-1,5, independents.shape[1]])
 #architecture=mv.neural_architecture(2, [predictors.shape[1]-1,5, 1])
 #print(independents)
 #print(architecture)

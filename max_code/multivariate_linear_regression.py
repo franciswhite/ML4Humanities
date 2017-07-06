@@ -72,7 +72,7 @@ def scale(predictors):
         if i>0:
             maxmin_difference=np.max(predictors[:,i])-np.min(predictors[:,i])
             #maxmin_difference=np.max(predictor_means[:,i])-np.min(predictor_means[:,i])
-        scaled_predictor=[x/maxmin_difference for x in predictors[:,i]]
+        scaled_predictor=[x/(maxmin_difference+0.000000001) for x in predictors[:,i]]
         temp_scaled_predictors=temp_scaled_predictors+[scaled_predictor]
         #print(temp_scaled_predictors)
     predictors=np.transpose(np.array(temp_scaled_predictors))
@@ -313,7 +313,7 @@ def logistic_cost_derivative(predictors, predictions, independents, checker):
     cost_derivatives=np.array(temp_cost_derivatives)
     return cost_derivatives
 
-def gradient_descent(parameters, cost_derivatives, checker, alpha=1, reg=0, number_of_values=0):
+def gradient_descent(parameters, cost_derivatives, checker, alpha=3, reg=0, number_of_values=0):
     """
 
     :param parameters: An array containing parameter values
@@ -841,7 +841,7 @@ def gradient_check(architecture, predictors, independents, reg, epsilon=0.0001):
     # return grad_approx
 
 
-def train_neural_network(predictors, architecture, independents_array, reg=0, max_iter=500, life_graph="y", optimization_function=gradient_descent, gradient_checker=0):
+def train_neural_network(predictors, architecture, independents_array, reg=0.01, max_iter=10000, life_graph="y", optimization_function=gradient_descent, gradient_checker=0):
     """
 
     :param predictors: An array of predictor values
@@ -855,15 +855,16 @@ def train_neural_network(predictors, architecture, independents_array, reg=0, ma
     """
     #for i in range(independents_array.shape[1]):
         #independents=independents_array[:,i]
+    counter = 0
     if life_graph=="y":
         fig = matp.figure()
         ax = fig.add_subplot(111)
         x = np.arange(10000)
+        #x=counter
         y = np.zeros(10000)
         li, = ax.plot(x, y)
         fig.canvas.draw()
         matp.show(block=False)
-    counter = 0
     checker = [1] * len(unroll(architecture))
     while checker != [0] * predictors.shape[1] and counter <= max_iter:
         predictions = []
@@ -914,7 +915,18 @@ def train_neural_network(predictors, architecture, independents_array, reg=0, ma
         temp_architecture= unroll(architecture)
         temp_Reg_Delta= unroll(Reg_Delta)
         #for i in range(architecture.size):
-        temp_parameters = optimization_function(temp_architecture, temp_Reg_Delta, checker)  # check whether flattening is needed
+        #if counter<=7500:
+            #alpha=1
+        if counter<=7500:
+            alpha=3
+        if counter<=1000:
+            alpha=10
+        if counter<=100:
+            alpha=30
+        if counter>7500:
+            alpha=1
+        print(alpha)
+        temp_parameters = optimization_function(temp_architecture, temp_Reg_Delta, checker, alpha)  # check whether flattening is needed
         temp_architecture = temp_parameters
         temp_architecture=rollin(temp_architecture, architecture)
         # convergence_checker(checker, temp_architecture, architecture, epsilon=0.0001)
