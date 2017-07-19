@@ -1,7 +1,7 @@
-from ML4Humanities.max_code import multivariate_linear_regression as mv
+from ML4Humanities.max_code import machine_learning_methods as mv
 import numpy as np
 
-#The following code reads several toy data files if uncommented
+#The following code reads several data files if uncommented. Enter paths to data. For the neural network, data should have three columns.
 data=mv.get_data('toy_data')
 predictors=mv.get_predictors(data)
 independents=mv.get_independents(data)
@@ -15,13 +15,14 @@ logistic_independents=mv.get_independents(logistic_data)
 
 multiclass_data=mv.get_data('multiclass_toy_data')
 multiclass_predictors=mv.get_predictors(multiclass_data)
+#The commented line scales unscaled data.
 #multiclass_predictors=(mv.scale(multiclass_predictors))
 multiclass_independents=mv.get_independents(multiclass_data)
 multiclass_independents=mv.multiclass_independents(multiclass_independents)
 
 
 neural_data=mv.get_data('neural_network_toy')
-unsupervised_predictors=mv.get_unsupervised_predictors(neural_data)
+unsupervised_predictors=mv.get_predictors(neural_data)
 
 #The following code contains various functions to manipulate predictors (merging, squaring etc...). Enter desired parameters and apply BEFORE scaling.
 #mv.multiply_predictors(predictors, 1,2)
@@ -32,15 +33,15 @@ unsupervised_predictors=mv.get_unsupervised_predictors(neural_data)
 
 
 
-#The following code runs multivariate linear regression using gradient descent on the toy data if uncommented.
+#The following code runs multivariate linear regression using gradient descent on the data if uncommented.
 
 print(mv.linear_regression(scaled_predictors, scaled_independents, 0, predictors.shape[0]))
 
-#The following code runs multivariate linear regression using the normal equation on the toy data if uncommented.
+#The following code runs multivariate linear regression using the normal equation on the data if uncommented.
 
 print(mv.normal_linear_regression(predictors, independents, 0))
 
-#The following code runs multivariate logistic regression using gradient descent on the logistic toy data if uncommented.
+#The following code runs multivariate logistic regression using gradient descent on the logistic data if uncommented.
 
 result1=mv.logistic_regression(logistic_predictors, logistic_independents, 0.01, logistic_predictors.shape[0])
 
@@ -48,26 +49,17 @@ result1=mv.logistic_regression(logistic_predictors, logistic_independents, 0.01,
 
 result2=mv.optimized_logistic_regression(logistic_predictors, logistic_independents, 1)
 
-#The following is to compare the results of gradient descent and the advanced algorithm
-print(result1)
-print(result2)
-print(mv.logistic_predictions(logistic_predictors,result1))
-print(mv.logistic_predictions(logistic_predictors,np.array( [ 0.12378762,  1.50871727])))
-print(mv.logistic_cost2(result1, logistic_predictors, logistic_independents))
-print(mv.logistic_cost2(np.array( [ 0.12378762,  1.50871727]), logistic_predictors, logistic_independents))
-#print(mv.logistic_cost(mv.logistic_predictions(logistic_predictors,result1), logistic_independents))
-
-
 #The following code runs multiclass logistic regression using gradient descent
 multiresult=mv.multiclass_logistic_regression(multiclass_predictors,multiclass_independents)
 print("Multiresult", multiresult)
+#predictions for the toy data based on trained parameters
 print("Multipredictions",mv.multiclass_predictions(multiclass_predictors, multiresult))
-print("multipredict 2", mv.multiclass_predict(2, multiresult))
+#Prediction for some value based on trained parameters. Gives the predicted class and the confidence in the prediction.
+print("multipredict 9", mv.multiclass_predict(9, multiresult))
 
+#The following code executes the XNOR logic gate implemented as neural networks on the data if uncommented.
 
-#The following code executes various logic gates implemented as neural networks on toy data if uncommented.
-
-print(mv.neural_network(unsupervised_predictors,mv.neural_XNOR))
+print("XNOR predictions",mv.neural_network(unsupervised_predictors,mv.neural_XNOR))
 
 
 

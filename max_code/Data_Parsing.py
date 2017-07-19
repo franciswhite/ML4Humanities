@@ -2,7 +2,7 @@ import os
 import codecs
 import itertools
 import numpy as np
-from ML4Humanities.max_code import multivariate_linear_regression as mv
+from ML4Humanities.max_code import machine_learning_methods as mv
 import random
 
 def get_contexts(path="c:\\users\\maxgr\\Downloads\\Machine Learning for the Humanities\\Bolzano_Dataset"):
