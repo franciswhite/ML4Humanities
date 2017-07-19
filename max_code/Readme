@@ -1,2 +1,2 @@
 The functions are contained in "multivariate_linear_regression.py". Run "exec_multiregression.py"
-to run your desired machine learning method on the toy data provided.
+to run linear, multilinear, logistic or multiclass regressions on the toy data provided Comment out the code that is not needed. USe "exec_neural_network.py" to train a neural network. Use "Neural_network_predict" to make predictions using a trained neural network.
